@@ -1,0 +1,427 @@
+@model List<MvcApplication1.Models.AppMenu>
+@{
+    ViewBag.Title = "Manage Page Links";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var parentMenus = ViewBag.ParentMenus as List<MvcApplication1.Models.AppMenu> ?? new List<MvcApplication1.Models.AppMenu>();
+}
+
+<style>
+    .admin-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .admin-card:hover {
+        box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.06);
+    }
+
+    .card-header-admin {
+        padding: 1.25rem 1.5rem;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .card-header-admin h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.15rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-body-admin {
+        padding: 1.75rem;
+    }
+
+    .custom-input-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    .custom-input-group ion-icon.input-icon {
+        position: absolute;
+        left: 14px;
+        font-size: 1.25rem;
+        color: #64748b;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .custom-input-group .form-control,
+    .custom-input-group .form-select {
+        padding-left: 44px;
+        height: 48px;
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        font-weight: 500;
+        color: #1e293b;
+        background-color: #f8fafc;
+        transition: all 0.2s ease;
+        width: 100%;
+    }
+
+    .custom-input-group .form-control:focus,
+    .custom-input-group .form-select:focus {
+        background-color: #ffffff;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    }
+
+    .table-modern {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table-modern thead th {
+        background-color: #f8fafc;
+        color: #475569;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 12px 16px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .table-modern tbody tr {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .table-modern tbody tr:hover {
+        background-color: #f1f5f9;
+    }
+
+    .table-modern tbody td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
+    .selected-row {
+        background-color: #eff6ff !important;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .btn-submit {
+        background-color: #3b82f6;
+        color: #ffffff;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        border: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-submit:hover {
+        background-color: #2563eb;
+        transform: translateY(-1px);
+    }
+
+    .btn-reset {
+        background-color: #64748b;
+        color: #ffffff;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        border: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-reset:hover {
+        background-color: #475569;
+        transform: translateY(-1px);
+    }
+</style>
+
+<div class="container-fluid py-4" style="font-family: 'Inter', sans-serif;">
+    
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success d-flex align-items-center gap-2 border-0 rounded-4 p-3 mb-4 shadow-sm" role="alert" style="background-color: #ecfdf5; color: #065f46;">
+            <ion-icon name="checkmark-circle-outline" style="font-size: 1.5rem;"></ion-icon>
+            <div>@TempData["Message"]</div>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Form to Add/Edit Menus -->
+        <div class="col-xl-4">
+            <div class="admin-card" id="menuFormContainer">
+                <div class="card-header-admin">
+                    <h5>
+                        <ion-icon name="link-outline"></ion-icon>
+                        <span>Manage Page Links</span>
+                    </h5>
+                    <span id="formModeBadge" style="font-size: 0.8rem; font-weight: 600; color: #60a5fa; display: flex; align-items: center; gap: 4px;">
+                        <ion-icon name="add-circle-outline"></ion-icon> Create Mode
+                    </span>
+                </div>
+                <div class="card-body-admin">
+                    @using (Html.BeginForm("SaveMenu", "Admin", FormMethod.Post, new { id = "menuForm" }))
+                    {
+                        <input type="hidden" id="menuId" name="MenuId" value="0" />
+
+                        <div class="mb-3">
+                            <label for="menuName" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Menu Display Name *</label>
+                            <div class="custom-input-group">
+                                <ion-icon name="text-outline" class="input-icon"></ion-icon>
+                                <input type="text" id="menuName" name="MenuName" required class="form-control" placeholder="E.g. Grade, Student Registration" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="url" style="font-weight: 600; color: #475569; margin-bottom: 6px;">URL Path</label>
+                            <div class="custom-input-group">
+                                <ion-icon name="globe-outline" class="input-icon"></ion-icon>
+                                <input type="text" id="url" name="Url" class="form-control" placeholder="E.g. ../Master/AddGrade" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="controllerName" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Controller</label>
+                                <div class="custom-input-group">
+                                    <ion-icon name="code-working-outline" class="input-icon"></ion-icon>
+                                    <input type="text" id="controllerName" name="ControllerName" class="form-control" placeholder="E.g. Master" />
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="actionName" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Action</label>
+                                <div class="custom-input-group">
+                                    <ion-icon name="flash-outline" class="input-icon"></ion-icon>
+                                    <input type="text" id="actionName" name="ActionName" class="form-control" placeholder="E.g. AddGrade" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="icon" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Icon Code</label>
+                                <div class="custom-input-group">
+                                    <ion-icon name="image-outline" class="input-icon"></ion-icon>
+                                    <input type="text" id="icon" name="Icon" class="form-control" placeholder="E.g. settings-outline" />
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="displayOrder" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Display Order</label>
+                                <div class="custom-input-group">
+                                    <ion-icon name="list-outline" class="input-icon"></ion-icon>
+                                    <input type="number" id="displayOrder" name="DisplayOrder" value="0" required class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="parentMenuId" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Parent Category (Dropdown)</label>
+                            <div class="custom-input-group">
+                                <ion-icon name="folder-open-outline" class="input-icon"></ion-icon>
+                                <select id="parentMenuId" name="ParentMenuId" class="form-select">
+                                    <option value="">None (Top-Level Item)</option>
+                                    @foreach (var parent in parentMenus)
+                                    {
+                                        <option value="@parent.MenuId">@parent.MenuName</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="status" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Status</label>
+                            <div class="custom-input-group">
+                                <ion-icon name="ellipse-outline" class="input-icon"></ion-icon>
+                                <select id="status" name="Status" required class="form-select">
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-submit flex-grow-1">Save Link</button>
+                            <button type="button" onclick="resetForm()" class="btn btn-reset">Clear</button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Table of Menu Items -->
+        <div class="col-xl-8">
+            <div class="admin-card">
+                <div class="card-header-admin">
+                    <h5>
+                        <ion-icon name="list-circle-outline"></ion-icon>
+                        <span>Links Directory</span>
+                        <span class="badge bg-primary rounded-pill ms-2" style="font-size: 0.8rem;">@Model.Count Links</span>
+                    </h5>
+                    <div class="search-box-container" style="min-width: 250px;">
+                        <div class="custom-input-group">
+                            <ion-icon name="search-outline" class="input-icon" style="color: #ffffff; opacity: 0.7;"></ion-icon>
+                            <input type="text" id="tableSearchInput" class="form-control text-white" placeholder="Search page links..." style="background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); height: 40px; font-size: 0.88rem;" />
+                        </div>
+                    </div>
+                </div>
+                <div class="p-0">
+                    <div class="table-responsive" style="max-height: 550px; overflow-y: auto;">
+                        <table class="table table-modern" id="menuTable">
+                            <thead>
+                                <tr>
+                                    <th style="display: none;">MenuId</th>
+                                    <th>Display Name</th>
+                                    <th>URL / Route</th>
+                                    <th>Parent</th>
+                                    <th style="width: 80px;">Order</th>
+                                    <th style="width: 140px;">Status</th>
+                                    <th style="display: none;">ControllerName</th>
+                                    <th style="display: none;">ActionName</th>
+                                    <th style="display: none;">Icon</th>
+                                    <th style="display: none;">ParentMenuId</th>
+                                    <th style="width: 80px;" class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    var isActive = (item.Status ?? "").ToLower() == "active";
+                                    var displayUrl = !string.IsNullOrEmpty(item.Url) 
+                                        ? item.Url 
+                                        : (!string.IsNullOrEmpty(item.ControllerName) ? item.ControllerName + "/" + item.ActionName : "-");
+                                        
+                                    <tr onclick="fillForm(this)"
+                                        data-id="@item.MenuId"
+                                        data-name="@item.MenuName"
+                                        data-url="@item.Url"
+                                        data-controller="@item.ControllerName"
+                                        data-action="@item.ActionName"
+                                        data-icon="@item.Icon"
+                                        data-order="@item.DisplayOrder"
+                                        data-parent="@item.ParentMenuId"
+                                        data-status="@item.Status">
+                                        <td style="display: none;">@item.MenuId</td>
+                                        <td class="fw-semibold text-dark">
+                                            @if (!string.IsNullOrEmpty(item.Icon))
+                                            {
+                                                <ion-icon name="@item.Icon" class="me-1 align-middle text-primary" style="font-size: 1.1rem;"></ion-icon>
+                                            }
+                                            @item.MenuName
+                                        </td>
+                                        <td class="text-secondary" style="font-family: monospace; font-size: 0.85rem;">@displayUrl</td>
+                                        <td class="text-secondary">@(string.IsNullOrEmpty(item.ParentMenuName) ? "None (Top-Level)" : item.ParentMenuName)</td>
+                                        <td class="text-secondary fw-bold">@item.DisplayOrder</td>
+                                        <td>
+                                            <span class="status-badge @(isActive ? "bg-success text-white" : "bg-warning text-dark")">
+                                                <ion-icon name="@(isActive ? "checkmark-circle" : "alert-circle")"></ion-icon>
+                                                @item.Status
+                                            </span>
+                                        </td>
+                                        <td style="display: none;">@item.ControllerName</td>
+                                        <td style="display: none;">@item.ActionName</td>
+                                        <td style="display: none;">@item.Icon</td>
+                                        <td style="display: none;">@item.ParentMenuId</td>
+                                        <td class="text-end">
+                                            <button type="button" class="btn btn-sm btn-light border rounded-2" title="Click to edit">
+                                                <ion-icon name="create-outline" style="font-size: 1rem; color: #3b82f6;"></ion-icon>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function fillForm(row) {
+            $('#menuTable tbody tr').removeClass('selected-row');
+            $(row).addClass('selected-row');
+
+            const menuId = row.getAttribute("data-id");
+            const menuName = row.getAttribute("data-name");
+            const displayUrl = row.getAttribute("data-url");
+            const controller = row.getAttribute("data-controller");
+            const action = row.getAttribute("data-action");
+            const icon = row.getAttribute("data-icon");
+            const displayOrder = row.getAttribute("data-order");
+            const parentMenuId = row.getAttribute("data-parent");
+            const status = row.getAttribute("data-status");
+
+            document.getElementById("menuId").value = menuId;
+            document.getElementById("menuName").value = menuName;
+            document.getElementById("url").value = displayUrl === "-" ? "" : displayUrl;
+            document.getElementById("controllerName").value = controller;
+            document.getElementById("actionName").value = action;
+            document.getElementById("icon").value = icon;
+            document.getElementById("displayOrder").value = displayOrder;
+            document.getElementById("parentMenuId").value = parentMenuId || "";
+            document.getElementById("status").value = status;
+
+            $('#formModeBadge').html('<ion-icon name="create-outline"></ion-icon> Editing Link #' + menuId).css('color', '#fbbf24');
+            document.getElementById("menuFormContainer").scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById("menuId").value = "0";
+            document.getElementById("menuName").value = "";
+            document.getElementById("url").value = "";
+            document.getElementById("controllerName").value = "";
+            document.getElementById("actionName").value = "";
+            document.getElementById("icon").value = "";
+            document.getElementById("displayOrder").value = "0";
+            document.getElementById("parentMenuId").value = "";
+            document.getElementById("status").value = "Active";
+
+            $('#menuTable tbody tr').removeClass('selected-row');
+            $('#formModeBadge').html('<ion-icon name="add-circle-outline"></ion-icon> Create Mode').css('color', '#60a5fa');
+        }
+
+        $(document).ready(function () {
+            $('#tableSearchInput').on('keyup input', function () {
+                const query = $(this).val().toLowerCase().trim();
+                $('#menuTable tbody tr').each(function () {
+                    const text = $(this).text().toLowerCase();
+                    if (text.indexOf(query) !== -1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+
+            setTimeout(function () {
+                const alert = document.querySelector('.alert');
+                if (alert) alert.style.display = 'none';
+            }, 3000);
+        });
+    </script>
+}

@@ -1,0 +1,5 @@
+roleId = 1
+view_@item.MenuId = true
+add_@item.MenuId = true
+edit_@item.MenuId = true
+delete_@item.MenuId = true

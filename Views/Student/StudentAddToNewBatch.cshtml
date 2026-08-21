@@ -1,0 +1,427 @@
+@{
+ViewBag.Title = "StudentAddToNewBatch";
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- StudentAddToNewBatch.cshtml content -->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- CSS -->
+        <link rel="stylesheet" href="@Url.Content("~/Content/StyleSheet4.css")" />
+
+
+        <title>Add Student To New Batch & Class</title>
+
+    </head>
+    <body>
+
+
+        @model List<MvcApplication1.Models.StudentAddToNewBatchModels>
+        @{
+    }
+
+
+
+    <!-- Form -->
+    <div class="container text-center">
+        <h4><span id="formHeaderEmoji"></span> Add Student To New Batch & Class</h4>
+        @using (Html.BeginForm("StudentAddToNewBatch", "Student", FormMethod.Post, new { enctype = "multipart/form-data", @class = "addform", id = "StudentAddToNewBatchForm" }))
+        {
+            <!-- 2-Column Grid Layout matching the sketch -->
+            <div class="row" style="display: flex !important; flex-direction: row !important; flex-wrap: wrap; width: 100% !important; margin: 0 !important; gap: 20px;">
+                <!-- Previous Section (Left Column) -->
+                <div class="col-md-6 text-start" style="text-align: left; flex: 1; min-width: 300px; display: flex !important; flex-direction: column !important; gap: 15px; border-right: 1px solid #e2e8f0; padding-right: 20px;">
+                    <h5 class="text-primary fw-bold mb-3 border-bottom pb-2">Previous</h5>
+
+                    <div class="d-flex flex-column gap-1">
+                        <label for="PrevYearDropdown" style="font-weight: 600; color: #475569;">Year:</label>
+                        @Html.DropDownList("PrevYear", (SelectList)ViewBag.Years, "--Select Year--", new { @class = "form-control", @id = "PrevYearDropdown", required = "required" })
+                    </div>
+
+                    <div class="d-flex flex-column gap-1">
+                        <label for="PrevGradeDropdown" style="font-weight: 600; color: #475569;">Grade:</label>
+                        @Html.DropDownList("PrevGrade", (SelectList)ViewBag.Grades, "--Select Grade--", new { @class = "form-control", @id = "PrevGradeDropdown", required = "required" })
+                    </div>
+
+                    <div class="d-flex flex-column gap-1">
+                        <label for="Prevbatchserial" style="font-weight: 600; color: #475569;">Batch:</label>
+                        <select id="Prevbatchserial" class="form-control" name="prevBatch" required>
+                            <option value="">-- Select Batch --</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex flex-column gap-1">
+                        <label for="Prevclasssserial" style="font-weight: 600; color: #475569;">Class:</label>
+                        <select id="Prevclasssserial" class="form-control" name="prevClass" required>
+                            <option value="">-- Select Class --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- New Section (Right Column) -->
+                <div class="col-md-6 text-start" style="text-align: left; flex: 1; min-width: 300px; display: flex !important; flex-direction: column !important; gap: 15px; padding-left: 20px;">
+                    <h5 class="text-success fw-bold mb-3 border-bottom pb-2">New</h5>
+
+                    <div class="d-flex flex-column gap-1">
+                        <label for="NewYearDropdown" style="font-weight: 600; color: #475569;">Year:</label>
+                        @Html.DropDownList("NewYear", (SelectList)ViewBag.Years, "--Select Year--", new { @class = "form-control", @id = "NewYearDropdown", required = "required", @disabled = "disabled" })
+                    </div>
+
+                    <div class="d-flex flex-column gap-1">
+                        <label for="NewGradeDropdown" style="font-weight: 600; color: #475569;">Grade:</label>
+                        @Html.DropDownList("NewGrade", (SelectList)ViewBag.Grades, "--Select Grade--", new { @class = "form-control", @id = "NewGradeDropdown", required = "required", @disabled = "disabled" })
+                    </div>
+
+                    <div class="d-flex flex-column gap-1">
+                        <label for="Newbatchserial" style="font-weight: 600; color: #475569;">Batch:</label>
+                        <select id="Newbatchserial" class="form-control" name="newBatch" required="required">
+                            <option value="">-- Select Batch --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="studentsGrid" class="mt-4">
+
+            </div>
+        }
+    </div>
+    @if (TempData["Message"] != null)
+    {
+        <script>
+            window.onload = function () {
+            var toastLive = document.getElementById('liveToast');
+            var toast = new bootstrap.Toast(toastLive);
+            toast.show();
+            };
+        </script>
+    }
+
+    @section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#formHeaderEmoji').html('&#x2795;');
+
+        // Year selection change
+        $('#PrevYearDropdown').change(function () {
+        var prevYear = parseInt($(this).val());
+        if (prevYear) {
+        $('#NewYearDropdown').val(prevYear + 1);
+    }
+    else
+    {
+        $('#NewYearDropdown').val('');
+    }
+    loadbatches();
+    loadNewbatches();
+    });
+
+    // Grade selection change
+    $('#PrevGradeDropdown').change(function () {
+    var prevGradeText = $('#PrevGradeDropdown option:selected').text().trim();
+    var prevGradeVal = $(this).val();
+    if (prevGradeVal) {
+    var nextGradeText = (parseInt(prevGradeText) + 1).toString();
+    var nextGradeValue = "";
+    $('#NewGradeDropdown option').each(function() {
+    if ($(this).text().trim() === nextGradeText) {
+    nextGradeValue = $(this).val();
+}
+});
+$('#NewGradeDropdown').val(nextGradeValue);
+}
+else
+{
+    $('#NewGradeDropdown').val('');
+}
+loadbatches();
+loadNewbatches();
+});
+
+// Trigger batch reload if user manually modifies New Year or New Grade
+$('#NewYearDropdown, #NewGradeDropdown').change(function () {
+loadNewbatches();
+});
+
+// Previous batch change
+$('#Prevbatchserial').change(function () {
+loadClasses();
+});
+
+// Previous class change (Auto load student table)
+$('#Prevclasssserial').change(function () {
+if ($(this).val()) {
+searchStudents();
+}
+else
+{
+    $('#studentsGrid').empty();
+}
+});
+
+// Update New Class dropdowns in table rows dynamically if New Batch dropdown changes
+$('#Newbatchserial').change(function () {
+var newBatch = $(this).val();
+if (newBatch) {
+if ($('#studentsGrid table').length > 0) {
+$.ajax({
+url: '/Student/GetClassesByBatch',
+type: 'GET',
+data: { batchSerial: newBatch },
+success: function (data) {
+var selects = $('#studentsGrid select[name="NewClassSerial"]');
+selects.each(function () {
+var select = $(this);
+select.empty().append('<option value="">-- Select Class --</option>');
+$.each(data, function (i, item) {
+select.append('<option value="' + item.Value + '">' + item.Text + '</option>');
+});
+});
+}
+});
+}
+else
+{
+    searchStudents();
+}
+}
+else
+{
+    $('#studentsGrid').empty();
+}
+});
+
+// Load batches by year & grade (both status) for previous
+function loadbatches() {
+var year = $('#PrevYearDropdown').val();
+var gradeSerial = $('#PrevGradeDropdown').val();
+
+if (year && gradeSerial) {
+$.ajax({
+url: '/Student/GetBatchesByYearGradeBothStatus',
+type: 'GET',
+data: { year: year, gradeSerial: gradeSerial },
+success: function (data) {
+var batchDropdown = $('#Prevbatchserial');
+batchDropdown.empty();
+batchDropdown.append('<option value="">-- Select Batch --</option>');
+$.each(data, function (i, batch) {
+batchDropdown.append('<option value="' + batch.Value + '">' + batch.Text + '</option>');
+});
+$('#Prevclasssserial').empty().append('<option value="">-- Select Class --</option>');
+$('#studentsGrid').empty();
+},
+error: function (xhr, status, error) {
+console.error("Error loading batches:", error);
+}
+});
+}
+else
+{
+    $('#Prevbatchserial').empty().append('<option value="">-- Select Batch --</option>');
+    $('#Prevclasssserial').empty().append('<option value="">-- Select Class --</option>');
+    $('#studentsGrid').empty();
+}
+}
+
+// Load batches by year & grade (active only) for new
+function loadNewbatches() {
+var year = $('#NewYearDropdown').val();
+var gradeSerial = $('#NewGradeDropdown').val();
+
+if (year && gradeSerial) {
+$.ajax({
+url: '/Student/GetBatchesByYearGradeActive',
+type: 'GET',
+data: { year: year, gradeSerial: gradeSerial },
+success: function (data) {
+var batchDropdown = $('#Newbatchserial');
+batchDropdown.empty();
+batchDropdown.append('<option value="">-- Select Batch --</option>');
+$.each(data, function (i, batch) {
+batchDropdown.append('<option value="' + batch.Value + '">' + batch.Text + '</option>');
+});
+},
+error: function (xhr, status, error) {
+console.error("Error loading new batches:", error);
+}
+});
+}
+else
+{
+    $('#Newbatchserial').empty().append('<option value="">-- Select Batch --</option>');
+}
+}
+
+// Load previous classes
+function loadClasses() {
+var batchSerial = $('#Prevbatchserial').val();
+
+if (batchSerial) {
+$.ajax({
+url: '/Student/GetClassesByBatchBothStatus',
+type: 'GET',
+data: { batchSerial: batchSerial },
+success: function (data) {
+var classDropdown = $('#Prevclasssserial');
+classDropdown.empty().append('<option value="">-- Select Class --</option>');
+$.each(data, function (i, item) {
+classDropdown.append('<option value="' + item.Value + '">' + item.Text + '</option>');
+});
+$('#studentsGrid').empty();
+}
+});
+}
+else
+{
+    $('#Prevclasssserial').empty().append('<option value="">-- Select Class --</option>');
+    $('#studentsGrid').empty();
+}
+}
+});
+</script>
+}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function searchStudents() {
+    var prevYear = $('#PrevYearDropdown').val();
+    var prevBatch = $('#Prevbatchserial').val();
+    var prevClass = $('#Prevclasssserial').val();
+    var newYear = $('#NewYearDropdown').val();
+    var newBatch = $('#Newbatchserial').val();
+
+    if (!prevYear || !prevBatch || !prevClass || !newYear || !newBatch) {
+    return;
+}
+
+if (prevYear === newYear) {
+alert("Previous Year and New Year cannot be the same.");
+return;
+}
+
+if (prevBatch === newBatch) {
+alert("Previous Batch and New Batch cannot be the same.");
+return;
+}
+
+$.ajax({
+url: '/Student/SearchStudentsforAddNewBatch',
+type: 'GET',
+data: {
+prevYear: prevYear,
+prevBatch: prevBatch,
+prevClass: prevClass,
+newYear: newYear,
+newBatch: newBatch
+},
+success: function (response) {
+$('#studentsGrid').html(response);
+if ($('#studentsGrid tbody tr').length === 0) {
+var toastLive = document.getElementById('liveToast');
+if (toastLive) {
+$(toastLive).find('.toast-body').text('No students found.');
+$(toastLive).removeClass('bg-success').addClass('bg-danger');
+var toast = new bootstrap.Toast(toastLive);
+toast.show();
+}
+else
+{
+    alert('No students found.');
+}
+$('#studentsGrid').empty();
+}
+},
+error: function () {
+alert("Error occurred.");
+}
+});
+}
+
+function saveAllAssignments() {
+var assignments = [];
+var prevYear = $('#PrevYearDropdown').val();
+var prevBatch = $('#Prevbatchserial').val();
+var prevClass = $('#Prevclasssserial').val();
+var newYear = $('#NewYearDropdown').val();
+var newBatch = $('#Newbatchserial').val();
+
+if (!prevYear || !prevBatch || !prevClass || !newYear || !newBatch) {
+alert("Please select all search criteria first.");
+return;
+}
+
+var rows = $('#studentsGrid tbody tr');
+if (rows.length === 0) {
+alert("No students to save.");
+return;
+}
+
+var hasEmptyClass = false;
+rows.each(function () {
+var row = $(this);
+var studentSerial = row.find('input[name="StudentSerial"]').val();
+var status = row.find('select[name="Status"]').val();
+var newClassSerial = row.find('select[name="NewClassSerial"]').val();
+
+if (status === 'Active' && !newClassSerial) {
+hasEmptyClass = true;
+}
+
+assignments.push({
+StudentSerial: studentSerial,
+Status: status,
+NewClassSerial: newClassSerial ? newClassSerial : null,
+PrevYear: prevYear,
+PrevBatchSerial: prevBatch,
+PrevClassSerial: prevClass,
+NewYear: newYear,
+NewBatchSerial: newBatch
+});
+});
+
+if (hasEmptyClass) {
+alert("Please assign a new class for all active students.");
+return;
+}
+
+$.ajax({
+url: '/Student/SaveAllStudentNewBatch',
+type: 'POST',
+contentType: 'application/json',
+data: JSON.stringify({ assignments: assignments }),
+success: function (res) {
+alert(res.message);
+if (res.success) {
+$('#StudentAddToNewBatchForm')[0].reset();
+$('#Prevbatchserial').empty().append('<option value="">-- Select Batch --</option>');
+$('#Prevclasssserial').empty().append('<option value="">-- Select Class --</option>');
+$('#Newbatchserial').empty().append('<option value="">-- Select Batch --</option>');
+$('#NewYearDropdown').val('');
+$('#NewGradeDropdown').val('');
+$('#studentsGrid').empty();
+}
+},
+error: function () {
+alert("An error occurred while saving the data.");
+}
+});
+}
+</script>
+<script>
+    setTimeout(function () {
+    const alert = document.querySelector('.alert');
+    if (alert) {
+    alert.style.display = 'none';
+}
+}, 3000); // Hide after 3 seconds
+</script>
+
+</body>
+</html>

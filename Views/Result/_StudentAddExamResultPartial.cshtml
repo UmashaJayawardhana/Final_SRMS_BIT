@@ -1,0 +1,77 @@
+@{
+    ViewBag.Title = "_StudentAddExamResultPartial";
+}
+
+@model List<MvcApplication1.Models.ResultModels>
+
+<table class="table table-bordered" id="examResultTable">
+    <thead>
+        <tr>
+             <th style="display:none;">ExamResultSerial</th> 
+            <th style="display:none;">Student Serial No</th> 
+            <th>No</th>
+            <th>Full Name</th>
+            <th>Reg No</th>
+            <th>Attedance</th>
+            <th>Result</th>
+            <th>
+                
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (int i = 0; i < Model.Count; i++)
+        {
+
+            <tr>
+                <td style="display:none; "> 
+                  
+              <input type="hidden" name="ExamResultSerial" value="@(Model[i].ExamResultSerial.HasValue ? Model[i].ExamResultSerial : 0)" />
+
+
+                </td>
+               
+                <td style="display:none; "> 
+                    <input type="hidden" name="StudentSerial" value="@Model[i].StudentSerial" />
+                </td>
+                <td>@(i + 1)</td>
+                <td>@Model[i].FullName</td>
+                <td>@Model[i].RegNo</td>
+                <td>    
+                        <input type="text" name="Attedance" value="@Model[i].Attedance" readonly/>
+                </td>
+               <td><input type="text" name="Result" id="result" value="@(Model[i].Result.HasValue ? Model[i].Result.Value.ToString("0.##") : "")" /></td>
+                <td>
+                      <button type="button" class="btn btn-primary save-btn">Save</button>
+
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="mt-3 text-right" style="text-align: right; margin-bottom: 20px;">
+    <button type="button" class="btn btn-success" id="saveAllBtn" style="background-color: #22c55e; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Save All</button>
+</div>
+
+@if (TempData["Message"] != null)
+     {
+    <script>
+        window.onload = function () {
+            var toastLive = document.getElementById('liveToast');
+            var toast = new bootstrap.Toast(toastLive);
+            toast.show();
+        };
+    </script>
+     }
+<script>
+    setTimeout(function () {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            alert.style.display = 'none';
+        }
+    }, 3000); // Hide after 3 seconds
+</script>
+
+
+

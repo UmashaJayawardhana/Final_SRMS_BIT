@@ -1,0 +1,194 @@
+@{
+    ViewBag.Title = "Exam History";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .history-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    .history-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+    .score-badge {
+        font-size: 20px;
+        font-weight: bold;
+        padding: 8px 16px;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #334155;
+        border: 2px solid #cbd5e1;
+        text-align: center;
+    }
+    .score-badge.high { background: #dcfce7; color: #166534; border-color: #22c55e; }
+    .score-badge.medium { background: #fef9c3; color: #854d0e; border-color: #eab308; }
+    .score-badge.low { background: #fee2e2; color: #991b1b; border-color: #ef4444; }
+    
+    .question-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    .option-label {
+        display: block;
+        padding: 10px;
+        margin: 5px 0;
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+    }
+    .option-label input[type="radio"] {
+        margin-right: 10px;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header text-white" style="background: linear-gradient(135deg, #2c3e50, #3498db);">
+            <h4 class="mb-0"><i class="fas fa-history"></i> My Past Exams</h4>
+        </div>
+        <div class="card-body">
+            <div id="examsList">
+                <div class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary mb-3"></i>
+                    <p>Loading your past exams...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-search"></i> Exam Preview</h5>
+                <!-- Changed data-dismiss to data-bs-dismiss for Bootstrap 5 -->
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body bg-light" style="max-height: 70vh; overflow-y: auto;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 id="previewExamTitle" class="text-primary mb-0"></h4>
+                    <div id="previewScoreBadge" class="score-badge"></div>
+                </div>
+                <hr />
+                <div id="previewQuestionsContainer"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            loadPastExams();
+        });
+
+        function loadPastExams() {
+            $.get('/OnlineExam/GetStudentPastExams', function(data) {
+                var html = '';
+                if(data.length === 0) {
+                    html = '<div class="text-center py-5"><i class="fas fa-box-open fa-3x text-muted mb-3"></i><p class="text-muted">You have not completed any online exams yet.</p></div>';
+                } else {
+                    $.each(data, function(i, exam) {
+                        var scoreClass = '';
+                        if(exam.Result >= 75) scoreClass = 'high';
+                        else if(exam.Result >= 40) scoreClass = 'medium';
+                        else scoreClass = 'low';
+
+                        html += '<div class="history-card">';
+                        html += '  <div class="row align-items-center">';
+                        html += '    <div class="col-md-8">';
+                        html += '      <h4 class="text-primary mb-2">' + exam.ExamName + ' <span class="badge bg-info text-dark ms-2">' + exam.TermName + '</span></h4>';
+                        html += '      <div class="text-muted">';
+                        html += '        <i class="fas fa-book me-1"></i> Subject: <strong>' + exam.SubjectName + '</strong> | ';
+                        html += '        <i class="fas fa-users me-1"></i> Class: <strong>' + exam.ClassName + '</strong><br/>';
+                        html += '        <i class="fas fa-calendar-alt me-1 mt-2"></i> Date Taken: ' + exam.Date;
+                        html += '      </div>';
+                        html += '    </div>';
+                        html += '    <div class="col-md-4 text-end d-flex flex-column align-items-end justify-content-center">';
+                        html += '      <div class="score-badge ' + scoreClass + ' mb-3">Score: ' + exam.Result.toFixed(2) + '%</div>';
+                        html += '      <button class="btn btn-outline-primary" onclick="openPreview(' + exam.ExamScheduleAssignmentSerial + ', \'' + exam.ExamName + '\', ' + exam.Result + ')"><i class="fas fa-eye"></i> View Paper</button>';
+                        html += '    </div>';
+                        html += '  </div>';
+                        html += '</div>';
+                    });
+                }
+                $('#examsList').html(html);
+            });
+        }
+
+        function openPreview(assignmentId, examName, result) {
+            $('#previewExamTitle').text(examName);
+            
+            var scoreClass = result >= 75 ? 'high' : (result >= 40 ? 'medium' : 'low');
+            $('#previewScoreBadge').removeClass('high medium low').addClass(scoreClass).text('Score: ' + result.toFixed(2) + '%');
+            
+            $('#previewQuestionsContainer').html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>');
+            
+            var modal = new bootstrap.Modal(document.getElementById('previewModal'));
+            modal.show();
+
+            $.get('/OnlineExam/GetExamDataForStudent', { examScheduleAssignmentSerial: assignmentId }, function(res) {
+                if(res.success && res.questions.length > 0) {
+                    renderPreview(res.questions, res.submittedAnswers);
+                } else {
+                    $('#previewQuestionsContainer').html('<div class="alert alert-danger">Could not load exam data.</div>');
+                }
+            });
+        }
+
+        function renderPreview(questions, submittedAnswers) {
+            var html = '';
+            $.each(questions, function(i, q) {
+                var studentAnswer = submittedAnswers.find(a => a.QuestionSerial === q.QuestionSerial);
+                var selectedOpt = studentAnswer ? studentAnswer.SelectedOption : 0;
+                
+                var isCorrectAns = (selectedOpt === q.CorrectOption);
+                var cardClass = selectedOpt > 0 ? (isCorrectAns ? 'border border-success' : 'border border-danger') : 'border border-warning';
+                
+                html += '<div class="question-card ' + cardClass + '">';
+                html += '<h5 class="mb-3">Q' + (i+1) + ': ' + q.QuestionText + '</h5>';
+                
+                for(var opt=1; opt<=4; opt++) {
+                    var optText = '';
+                    if(opt===1) optText = q.Option1;
+                    if(opt===2) optText = q.Option2;
+                    if(opt===3) optText = q.Option3;
+                    if(opt===4) optText = q.Option4;
+                    
+                    if(optText) {
+                        var isChecked = (selectedOpt === opt) ? 'checked' : '';
+                        var bgClass = '';
+                        if(opt === q.CorrectOption) {
+                            bgClass = 'bg-success text-white'; // Correct answer
+                        } else if (opt === selectedOpt && selectedOpt !== q.CorrectOption) {
+                            bgClass = 'bg-danger text-white'; // Incorrectly selected
+                        }
+
+                        html += '<label class="option-label ' + bgClass + '"><input type="radio" disabled ' + isChecked + '> Option ' + opt + ') ' + optText + '</label>';
+                    }
+                }
+                
+                html += '<div class="mt-2 text-muted"><strong>Correct Answer: </strong> Option ' + q.CorrectOption + '</div>';
+                
+                html += '</div>';
+            });
+            $('#previewQuestionsContainer').html(html);
+        }
+    </script>
+}

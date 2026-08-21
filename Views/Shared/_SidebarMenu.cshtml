@@ -1,0 +1,52 @@
+@model IEnumerable<MvcApplication1.Models.AppMenu>
+
+@foreach (var parent in Model)
+{
+    if (parent.ChildMenus.Any())
+    {
+        <div class="dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="dropdown_@parent.MenuId" data-bs-toggle="dropdown" aria-expanded="false">
+                <ion-icon name="@(string.IsNullOrEmpty(parent.Icon) ? "folder-outline" : parent.Icon)"></ion-icon>
+                <span>@parent.MenuName</span>
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="dropdown_@parent.MenuId">
+                @foreach (var child in parent.ChildMenus)
+                {
+                    string targetUrl = child.Url;
+                    if (string.IsNullOrEmpty(targetUrl) && !string.IsNullOrEmpty(child.ControllerName))
+                    {
+                        targetUrl = Url.Action(child.ActionName, child.ControllerName);
+                    }
+                    else if (!string.IsNullOrEmpty(targetUrl))
+                    {
+                        targetUrl = Url.Content(targetUrl);
+                    }
+                    
+                    <li>
+                        <a class="dropdown-item" href="@targetUrl">
+                            <ion-icon name="@(string.IsNullOrEmpty(child.Icon) ? "chevron-forward-outline" : child.Icon)"></ion-icon> 
+                            @child.MenuName
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+    else
+    {
+        string targetUrl = parent.Url;
+        if (string.IsNullOrEmpty(targetUrl) && !string.IsNullOrEmpty(parent.ControllerName))
+        {
+            targetUrl = Url.Action(parent.ActionName, parent.ControllerName);
+        }
+        else if (!string.IsNullOrEmpty(targetUrl))
+        {
+            targetUrl = Url.Content(targetUrl);
+        }
+
+        <a href="@targetUrl" class="nav-link">
+            <ion-icon name="@(string.IsNullOrEmpty(parent.Icon) ? "link-outline" : parent.Icon)"></ion-icon>
+            <span>@parent.MenuName</span>
+        </a>
+    }
+}

@@ -1,0 +1,860 @@
+@model MvcApplication1.Models.UserProfileModels
+@{
+    ViewBag.Title = "My Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var photoUrl = !string.IsNullOrEmpty(Model.LookupPhoto) ? Model.LookupPhoto : Url.Content("~/Content/img/profileimg.png");
+    var statusLower = (Model.Status ?? "").ToLower();
+    var isStatusActive = statusLower == "active";
+}
+
+<style>
+    /* Modern Profile Header & Card Styles */
+    .profile-hero-card {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border-radius: 20px;
+        padding: 2.2rem 2rem;
+        color: #ffffff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+
+    .profile-hero-card::before {
+        content: '';
+        position: absolute;
+        top: -40%;
+        right: -10%;
+        width: 320px;
+        height: 320px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .profile-hero-card::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -5%;
+        width: 250px;
+        height: 250px;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .avatar-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+
+    .profile-avatar-img {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
+        background-color: #1e293b;
+    }
+
+    .profile-avatar-img:hover {
+        transform: scale(1.05);
+        border-color: #3b82f6;
+    }
+
+    .avatar-status-badge {
+        position: absolute;
+        bottom: 4px;
+        right: 6px;
+        width: 22px;
+        height: 22px;
+        background-color: @(isStatusActive ? "#10b981" : "#f59e0b");
+        border: 3.5px solid #0f172a;
+        border-radius: 50%;
+        box-shadow: 0 0 12px @(isStatusActive ? "rgba(16, 185, 129, 0.8)" : "rgba(245, 158, 11, 0.8)");
+    }
+
+    .info-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .info-card:hover {
+        box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.07);
+        border-color: #cbd5e1;
+    }
+
+    .card-header-custom {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-header-custom h5 {
+        margin: 0;
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 1.1rem;
+    }
+
+    .card-body-custom {
+        padding: 1.5rem;
+    }
+
+    .custom-input-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .custom-input-group ion-icon.input-icon {
+        position: absolute;
+        left: 14px;
+        font-size: 1.25rem;
+        color: #64748b;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .custom-input-group .form-control {
+        padding-left: 44px;
+        height: 48px;
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        font-weight: 500;
+        color: #1e293b;
+        background-color: #f8fafc;
+        transition: all 0.2s ease;
+    }
+
+    .custom-input-group .form-control:focus {
+        background-color: #ffffff;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    }
+
+    .copy-btn {
+        background: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-weight: 600;
+        font-size: 0.82rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+        background: #dbeafe;
+        color: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    .action-card-btn {
+        width: 100%;
+        padding: 1.1rem 1.25rem;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        text-align: left;
+        margin-bottom: 1rem;
+    }
+
+    .action-card-btn:hover {
+        border-color: #3b82f6;
+        background: #f8fafc;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -3px rgba(59, 130, 246, 0.12);
+    }
+
+    .action-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .bg-icon-blue { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
+    .bg-icon-purple { background: rgba(139, 92, 246, 0.12); color: #8b5cf6; }
+
+    /* Modern Modal Styling */
+    .modal-content-modern {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+    }
+
+    .modal-header-modern {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #ffffff;
+        padding: 1.25rem 1.5rem;
+        border-bottom: none;
+    }
+
+    .modal-header-modern .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+
+    .password-toggle-btn {
+        position: absolute;
+        right: 12px;
+        background: none;
+        border: none;
+        color: #64748b;
+        font-size: 1.25rem;
+        cursor: pointer;
+        z-index: 5;
+        padding: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: color 0.2s ease;
+    }
+
+    .password-toggle-btn:hover {
+        color: #1e293b;
+    }
+
+    .strength-meter-container {
+        margin-top: 10px;
+    }
+
+    .strength-meter {
+        height: 6px;
+        border-radius: 4px;
+        background-color: #e2e8f0;
+        overflow: hidden;
+        margin-top: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .strength-meter-bar {
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
+
+    .req-list {
+        list-style: none;
+        padding-left: 0;
+        margin-top: 10px;
+        font-size: 0.82rem;
+    }
+
+    .req-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #64748b;
+        margin-bottom: 4px;
+        transition: color 0.2s ease;
+    }
+
+    .req-item.valid {
+        color: #10b981;
+        font-weight: 600;
+    }
+
+    .req-item ion-icon {
+        font-size: 1rem;
+    }
+
+    .status-badge-pill {
+        padding: 5px 12px;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.78rem;
+        letter-spacing: 0.3px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* Live Username Check indicator */
+    #usernameFeedback {
+        font-size: 0.85rem;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+    }
+
+    #passwordMatchFeedback {
+        font-size: 0.85rem;
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+    }
+
+    /* Toast animation */
+    .toast-copy-feedback {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        background: #0f172a;
+        color: #ffffff;
+        padding: 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+    }
+
+    .toast-copy-feedback.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <!-- Hero Profile Section -->
+    <div class="profile-hero-card">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <div class="avatar-wrapper">
+                    <img src="@photoUrl" alt="Profile Photo" class="profile-avatar-img" id="userAvatarImg" />
+                    <div class="avatar-status-badge" title="Account Status: @Model.Status"></div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                    <h2 class="fw-bold m-0 text-white" style="font-size: 1.75rem;">@Model.FullName</h2>
+                    <span class="status-badge-pill @(isStatusActive ? "bg-success text-white" : "bg-warning text-dark")">
+                        <ion-icon name="@(isStatusActive ? "checkmark-circle" : "alert-circle")"></ion-icon>
+                        @(Model.Status ?? "Active")
+                    </span>
+                </div>
+                <p class="text-white-50 mb-2 font-monospace" style="font-size: 0.95rem;">
+                    @@@Model.UserName &bull; Reg: <span id="heroRegNo">@Model.RegNo</span>
+                </p>
+                <div class="d-flex align-items-center gap-2 mt-2">
+                    <button type="button" class="copy-btn" onclick="copyRegNo('@Model.RegNo')">
+                        <ion-icon name="copy-outline"></ion-icon> Copy Reg No
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details & Interactive Actions Grid -->
+    <div class="row g-4">
+        <!-- Personal Information Card -->
+        <div class="col-lg-6">
+            <div class="info-card">
+                <div class="card-header-custom">
+                    <ion-icon name="person-circle-outline" style="font-size: 1.5rem; color: #3b82f6;"></ion-icon>
+                    <h5>Profile Overview</h5>
+                </div>
+                <div class="card-body-custom">
+                    <div class="mb-3">
+                        <label class="form-label text-secondary fw-semibold small mb-1">Registration Number</label>
+                        <div class="custom-input-group">
+                            <ion-icon name="card-outline" class="input-icon"></ion-icon>
+                            <input type="text" class="form-control" value="@Model.RegNo" readonly id="inputRegNo" />
+                            <button type="button" class="copy-btn me-2" onclick="copyRegNo('@Model.RegNo')" style="position: absolute; right: 5px; z-index: 5;">
+                                <ion-icon name="copy-outline"></ion-icon> Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary fw-semibold small mb-1">Full Name</label>
+                        <div class="custom-input-group">
+                            <ion-icon name="person-outline" class="input-icon"></ion-icon>
+                            <input type="text" class="form-control" value="@Model.FullName" readonly />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary fw-semibold small mb-1">Username</label>
+                        <div class="custom-input-group">
+                            <ion-icon name="at-outline" class="input-icon"></ion-icon>
+                            <input type="text" class="form-control" value="@Model.UserName" readonly />
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label text-secondary fw-semibold small mb-1">Account Status</label>
+                        <div class="custom-input-group">
+                            <ion-icon name="shield-checkmark-outline" class="input-icon"></ion-icon>
+                            <input type="text" class="form-control text-capitalize" value="@Model.Status" readonly />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Security & Quick Actions -->
+        <div class="col-lg-6">
+            <div class="info-card">
+                <div class="card-header-custom">
+                    <ion-icon name="key-outline" style="font-size: 1.5rem; color: #8b5cf6;"></ion-icon>
+                    <h5>Account & Security Settings</h5>
+                </div>
+                <div class="card-body-custom">
+                    <p class="text-muted small mb-3">Manage your username credentials and secure your account with a strong password.</p>
+
+                    <!-- Change Username Card Action -->
+                    <button type="button" class="action-card-btn" data-bs-toggle="modal" data-bs-target="#usernameModal" onclick="openUsernamePopup()">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="action-card-icon bg-icon-blue">
+                                <ion-icon name="create-outline"></ion-icon>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1 text-dark" style="font-size: 0.95rem;">Change Username</h6>
+                                <p class="text-muted small mb-0">Update your account login handle</p>
+                            </div>
+                        </div>
+                        <ion-icon name="chevron-forward-outline" class="text-muted"></ion-icon>
+                    </button>
+
+                    <!-- Change Password Card Action -->
+                    <button type="button" class="action-card-btn" data-bs-toggle="modal" data-bs-target="#passwordModal" onclick="openPasswordPopup()">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="action-card-icon bg-icon-purple">
+                                <ion-icon name="lock-closed-outline"></ion-icon>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1 text-dark" style="font-size: 0.95rem;">Change Password</h6>
+                                <p class="text-muted small mb-0">Update password with live security check</p>
+                            </div>
+                        </div>
+                        <ion-icon name="chevron-forward-outline" class="text-muted"></ion-icon>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODERN MODALS ================= -->
+
+<!-- Change Username Modal -->
+<div class="modal fade" id="usernameModal" tabindex="-1" aria-labelledby="usernameModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-modern">
+            <div class="modal-header modal-header-modern">
+                <h5 class="modal-header-title m-0 fw-bold d-flex align-items-center gap-2" id="usernameModalLabel">
+                    <ion-icon name="at-circle-outline" style="font-size: 1.4rem;"></ion-icon> Change Username
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="closeUsernamePopup()" aria-label="Close"></button>
+            </div>
+            <form method="post" action="/Account/ChangeUsername" id="changeUsernameForm">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="UserSerial" value="@Model.UserSerial" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-secondary fw-semibold small">Current Username</label>
+                        <input type="text" class="form-control bg-light" value="@Model.UserName" readonly />
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label text-dark fw-semibold small">New Username <span class="text-danger">*</span></label>
+                        <div class="custom-input-group">
+                            <ion-icon name="person-circle-outline" class="input-icon"></ion-icon>
+                            <input type="text" name="NewUsername" id="inputNewUsername" class="form-control" placeholder="Enter new username" required autocomplete="off" />
+                        </div>
+                        <div id="usernameFeedback"></div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light px-4 py-3">
+                    <button type="button" class="btn btn-secondary px-4 rounded-3 fw-semibold" data-bs-dismiss="modal" onclick="closeUsernamePopup()">Cancel</button>
+                    <button type="submit" id="btnSaveUsername" class="btn btn-primary px-4 rounded-3 fw-semibold" disabled>
+                        <ion-icon name="checkmark-outline" class="me-1"></ion-icon> Save Username
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-modern">
+            <div class="modal-header modal-header-modern">
+                <h5 class="modal-header-title m-0 fw-bold d-flex align-items-center gap-2" id="passwordModalLabel">
+                    <ion-icon name="lock-closed-outline" style="font-size: 1.4rem;"></ion-icon> Change Password
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="closePasswordPopup()" aria-label="Close"></button>
+            </div>
+            <form method="post" action="/Account/ChangePassword" id="changePasswordForm">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="UserSerial" value="@Model.UserSerial" />
+
+                    <!-- Old Password -->
+                    <div class="mb-3">
+                        <label class="form-label text-dark fw-semibold small">Old Password <span class="text-danger">*</span></label>
+                        <div class="custom-input-group">
+                            <ion-icon name="key-outline" class="input-icon"></ion-icon>
+                            <input type="password" name="OldPassword" class="form-control" placeholder="Enter current password" required />
+                            <button type="button" class="password-toggle-btn" title="Toggle password visibility">
+                                <ion-icon name="eye-outline"></ion-icon>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- New Password -->
+                    <div class="mb-3">
+                        <label class="form-label text-dark fw-semibold small">New Password <span class="text-danger">*</span></label>
+                        <div class="custom-input-group">
+                            <ion-icon name="lock-open-outline" class="input-icon"></ion-icon>
+                            <input type="password" name="NewPassword" id="inputNewPassword" class="form-control" placeholder="Enter new password" required />
+                            <button type="button" class="password-toggle-btn" title="Toggle password visibility">
+                                <ion-icon name="eye-outline"></ion-icon>
+                            </button>
+                        </div>
+
+                        <!-- Live Strength Meter & Checklist -->
+                        <div class="strength-meter-container">
+                            <div class="d-flex justify-content-between align-items-center small">
+                                <span class="text-muted fw-semibold" style="font-size: 0.78rem;">Password Strength:</span>
+                                <span id="strengthText" class="fw-bold" style="font-size: 0.78rem; color: #94a3b8;">None</span>
+                            </div>
+                            <div class="strength-meter">
+                                <div class="strength-meter-bar" id="strengthBar"></div>
+                            </div>
+
+                            <ul class="req-list">
+                                <li class="req-item" id="reqLength">
+                                    <ion-icon name="close-circle-outline"></ion-icon> At least 6 characters
+                                </li>
+                                <li class="req-item" id="reqLetter">
+                                    <ion-icon name="close-circle-outline"></ion-icon> Contains letters (A-Z, a-z)
+                                </li>
+                                <li class="req-item" id="reqNumber">
+                                    <ion-icon name="close-circle-outline"></ion-icon> Contains numbers (0-9)
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="mb-2">
+                        <label class="form-label text-dark fw-semibold small">Confirm New Password <span class="text-danger">*</span></label>
+                        <div class="custom-input-group">
+                            <ion-icon name="shield-checkmark-outline" class="input-icon"></ion-icon>
+                            <input type="password" name="ConfirmPassword" id="inputConfirmPassword" class="form-control" placeholder="Confirm new password" required />
+                            <button type="button" class="password-toggle-btn" title="Toggle password visibility">
+                                <ion-icon name="eye-outline"></ion-icon>
+                            </button>
+                        </div>
+                        <div id="passwordMatchFeedback"></div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light px-4 py-3">
+                    <button type="button" class="btn btn-secondary px-4 rounded-3 fw-semibold" data-bs-dismiss="modal" onclick="closePasswordPopup()">Cancel</button>
+                    <button type="submit" id="btnSavePassword" class="btn btn-success px-4 rounded-3 fw-semibold">
+                        <ion-icon name="shield-checkmark-outline" class="me-1"></ion-icon> Save Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Copy Toast Feedback -->
+<div class="toast-copy-feedback" id="copyToast">
+    <ion-icon name="checkmark-circle" style="font-size: 1.4rem; color: #10b981;"></ion-icon>
+    <span>Registration number copied to clipboard!</span>
+</div>
+
+@section Scripts {
+    <script>
+        // -------------------------------------------------------------
+        // Copy to Clipboard Feedback
+        // -------------------------------------------------------------
+        function copyRegNo(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(showCopyToast).catch(fallbackCopy);
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.opacity = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showCopyToast();
+            } catch (err) {
+                alert('Copied: ' + text);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showCopyToast() {
+            const toast = document.getElementById('copyToast');
+            if (toast) {
+                toast.classList.add('show');
+                setTimeout(function () {
+                    toast.classList.remove('show');
+                }, 2500);
+            }
+        }
+
+        // -------------------------------------------------------------
+        // Backward Compatible Modal Helpers
+        // -------------------------------------------------------------
+        function openUsernamePopup() {
+            var modalEl = document.getElementById('usernameModal');
+            if (window.bootstrap && bootstrap.Modal) {
+                var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.show();
+            } else {
+                modalEl.style.display = 'block';
+                modalEl.classList.add('show');
+            }
+        }
+
+        function closeUsernamePopup() {
+            var modalEl = document.getElementById('usernameModal');
+            if (window.bootstrap && bootstrap.Modal) {
+                var modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            } else {
+                modalEl.style.display = 'none';
+                modalEl.classList.remove('show');
+            }
+        }
+
+        function openPasswordPopup() {
+            var modalEl = document.getElementById('passwordModal');
+            if (window.bootstrap && bootstrap.Modal) {
+                var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.show();
+            } else {
+                modalEl.style.display = 'block';
+                modalEl.classList.add('show');
+            }
+        }
+
+        function closePasswordPopup() {
+            var modalEl = document.getElementById('passwordModal');
+            if (window.bootstrap && bootstrap.Modal) {
+                var modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            } else {
+                modalEl.style.display = 'none';
+                modalEl.classList.remove('show');
+            }
+        }
+
+        // -------------------------------------------------------------
+        // Interactive Logic & Validation
+        // -------------------------------------------------------------
+        $(document).ready(function () {
+
+            // 1. Password Visibility Eye Toggle
+            $('.password-toggle-btn').on('click', function (e) {
+                e.preventDefault();
+                const input = $(this).siblings('input');
+                const icon = $(this).find('ion-icon');
+
+                if (input.attr('type') === 'password') {
+                    input.attr('type', 'text');
+                    icon.attr('name', 'eye-off-outline');
+                } else {
+                    input.attr('type', 'password');
+                    icon.attr('name', 'eye-outline');
+                }
+            });
+
+            // 2. Real-time Live Username Availability Checker with Debounce
+            let usernameTimer = null;
+            $('#inputNewUsername').on('keyup input', function () {
+                clearTimeout(usernameTimer);
+                const username = $(this).val().trim();
+                const userSerial = '@Model.UserSerial';
+                const feedback = $('#usernameFeedback');
+                const submitBtn = $('#btnSaveUsername');
+
+                if (username === '') {
+                    feedback.html('');
+                    submitBtn.prop('disabled', true);
+                    return;
+                }
+
+                if (username.toLowerCase() === '@(Model.UserName ?? "").ToLower()') {
+                    feedback.removeClass('text-danger').addClass('text-success')
+                            .html('<ion-icon name="information-circle-outline"></ion-icon> This is your current username.');
+                    submitBtn.prop('disabled', true);
+                    return;
+                }
+
+                feedback.removeClass('text-success text-danger')
+                        .addClass('text-muted')
+                        .html('<div class="spinner-border spinner-border-sm text-primary me-1"></div> Checking availability...');
+
+                usernameTimer = setTimeout(function () {
+                    $.ajax({
+                        url: '/Admin/IsUserNameAvailable',
+                        type: 'GET',
+                        data: { username: username, userSerial: userSerial },
+                        success: function (isAvailable) {
+                            if (isAvailable === true || isAvailable === "true") {
+                                feedback.removeClass('text-muted text-danger').addClass('text-success')
+                                        .html('<ion-icon name="checkmark-circle-outline" style="font-size:1.1rem;"></ion-icon> Username is available!');
+                                submitBtn.prop('disabled', false);
+                            } else {
+                                feedback.removeClass('text-muted text-success').addClass('text-danger')
+                                        .html('<ion-icon name="close-circle-outline" style="font-size:1.1rem;"></ion-icon> Username is already taken.');
+                                submitBtn.prop('disabled', true);
+                            }
+                        },
+                        error: function () {
+                            feedback.removeClass('text-muted text-success').addClass('text-danger')
+                                    .html('<ion-icon name="alert-circle-outline"></ion-icon> Unable to check availability.');
+                            submitBtn.prop('disabled', false);
+                        }
+                    });
+                }, 400);
+            });
+
+            // 3. Live Password Strength Meter & Requirement Checklist
+            $('#inputNewPassword').on('keyup input', function () {
+                const val = $(this).val();
+
+                const hasLen = val.length >= 6;
+                const hasLet = /[A-Za-z]/.test(val);
+                const hasNum = /\d/.test(val);
+
+                // Update checklist items
+                updateReq('#reqLength', hasLen);
+                updateReq('#reqLetter', hasLet);
+                updateReq('#reqNumber', hasNum);
+
+                // Calculate strength score
+                let score = 0;
+                if (val.length > 0) score += 1;
+                if (hasLen) score += 1;
+                if (hasLet && hasNum) score += 1;
+                if (val.length >= 10 && hasLet && hasNum) score += 1;
+
+                const bar = $('#strengthBar');
+                const label = $('#strengthText');
+
+                if (val.length === 0) {
+                    bar.css({ width: '0%', backgroundColor: '#e2e8f0' });
+                    label.text('None').css('color', '#94a3b8');
+                } else if (score <= 2) {
+                    bar.css({ width: '33%', backgroundColor: '#ef4444' });
+                    label.text('Weak').css('color', '#ef4444');
+                } else if (score === 3) {
+                    bar.css({ width: '66%', backgroundColor: '#f59e0b' });
+                    label.text('Fair').css('color', '#f59e0b');
+                } else {
+                    bar.css({ width: '100%', backgroundColor: '#10b981' });
+                    label.text('Strong').css('color', '#10b981');
+                }
+
+                checkPasswordMatch();
+            });
+
+            function updateReq(selector, isValid) {
+                const item = $(selector);
+                const icon = item.find('ion-icon');
+                if (isValid) {
+                    item.addClass('valid');
+                    icon.attr('name', 'checkmark-circle');
+                } else {
+                    item.removeClass('valid');
+                    icon.attr('name', 'close-circle-outline');
+                }
+            }
+
+            // 4. Live Confirm Password Match Indicator
+            $('#inputConfirmPassword').on('keyup input', function () {
+                checkPasswordMatch();
+            });
+
+            function checkPasswordMatch() {
+                const newPass = $('#inputNewPassword').val();
+                const confirmPass = $('#inputConfirmPassword').val();
+                const feedback = $('#passwordMatchFeedback');
+
+                if (confirmPass.length === 0) {
+                    feedback.html('');
+                    return;
+                }
+
+                if (newPass === confirmPass) {
+                    feedback.removeClass('text-danger').addClass('text-success')
+                            .html('<ion-icon name="checkmark-circle-outline" style="font-size:1.1rem;"></ion-icon> Passwords match.');
+                } else {
+                    feedback.removeClass('text-success').addClass('text-danger')
+                            .html('<ion-icon name="close-circle-outline" style="font-size:1.1rem;"></ion-icon> Passwords do not match.');
+                }
+            }
+
+            // 5. Form Submit Validation Handlers
+            $('#changePasswordForm').on('submit', function (e) {
+                const newPass = $('#inputNewPassword').val().trim();
+                const confirmPass = $('#inputConfirmPassword').val().trim();
+
+                const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+
+                if (!passwordRegex.test(newPass)) {
+                    alert("Password must be at least 6 characters long and include both letters and numbers.");
+                    $('#inputNewPassword').focus();
+                    e.preventDefault();
+                    return false;
+                }
+
+                if (newPass !== confirmPass) {
+                    alert("New password and confirm password do not match.");
+                    $('#inputConfirmPassword').focus();
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Clean up toast display after 4s
+            setTimeout(function () {
+                const alert = document.querySelector('.alert');
+                if (alert) alert.style.display = 'none';
+            }, 4000);
+        });
+    </script>
+}

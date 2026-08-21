@@ -1,0 +1,338 @@
+﻿@{
+    ViewBag.Title = "_StudentFinalAttendancePartial";
+}
+
+@model List<MvcApplication1.Models.ExamScheduleModels>
+
+<style>
+    /* Styling for attendance toggle buttons */
+    .attendance-toggle-group {
+        display: inline-flex;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: #f8fafc;
+        padding: 2px;
+    }
+    .attendance-btn {
+        border: none;
+        background: transparent;
+        color: #64748b;
+        padding: 6px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+    .attendance-btn:hover {
+        background-color: #e2e8f0;
+        color: #334155;
+    }
+    .attendance-btn.active.present-btn {
+        background-color: #22c55e !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 4px rgba(34, 197, 94, 0.15);
+    }
+    .attendance-btn.active.absent-btn {
+        background-color: #ef4444 !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.15);
+    }
+
+    /* Save status badges */
+    .save-status-badge {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 12px;
+        display: inline-block;
+        transition: all 0.2s ease;
+    }
+    .badge-pending {
+        background-color: #f1f5f9;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+    }
+    .badge-saving {
+        background-color: #eff6ff;
+        color: #3b82f6;
+        border: 1px solid #dbeafe;
+        animation: pulse-saving 1.5s infinite ease-in-out;
+    }
+    .badge-saved {
+        background-color: #dcfce7;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+    }
+    .badge-error {
+        background-color: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+
+    @@keyframes pulse-saving {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+</style>
+
+@if (Model.Count == 0)
+{
+    <div class="text-center py-5 bg-white rounded-4 border shadow-sm mt-3" style="max-width: 1100px; margin: 0 auto;">
+        <div style="font-size: 40px; opacity: 0.5;"></div>
+        <h5 class="text-muted fw-normal mt-2" style="font-size: 16px;">No students found for the selected schedule filters.</h5>
+    </div>
+}
+else
+{
+    <div class="addtable-container border-0 shadow-sm p-4 bg-white rounded-4" style="margin-top: 24px;">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-3">
+            <h4 class="m-0 border-0 p-0 d-flex align-items-center gap-2" style="font-size: 18px; font-weight: 700; color: #0f172a; border-bottom: none; width: auto;">
+                <span> &#x1F4C5;</span> Student Attendance Grid
+            </h4>
+            <div class="d-flex gap-2 w-100 w-sm-auto justify-content-end" style="margin-left: auto;">
+                <input type="text" id="gridSearch" onkeyup="filterGrid()" class="form-control" placeholder="Search by name or reg no..." style="height: 38px; font-size: 14px; border-radius: 8px; max-width: 300px; width: 100%; border: 1px solid #cbd5e1; padding: 6px 12px;" />
+            </div>
+        </div>
+
+        <!-- Bulk Operations Toolbar -->
+        <div class="d-flex flex-wrap gap-2 mb-3 align-items-center p-2 rounded-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+            <span class="fw-semibold text-muted small px-2">Bulk Actions:</span>
+            <button type="button" id="markAllPresent" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1" style="font-weight: 600; font-size: 13px; border-radius: 6px; padding: 6px 12px;">
+                <span>✔</span> Mark All Present
+            </button>
+            <button type="button" id="markAllAbsent" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" style="font-weight: 600; font-size: 13px; border-radius: 6px; padding: 6px 12px;">
+                <span>✖</span> Mark All Absent
+            </button>
+            <button type="button" id="saveAllBtn" class="btn btn-sm btn-primary d-flex align-items-center gap-1" style="font-weight: 600; font-size: 13px; border-radius: 6px; padding: 6px 16px; background-color: #3b82f6; border-color: #3b82f6; margin-left: auto; color: white;">
+                <span>💾</span> Save All
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table addtable align-middle">
+                <thead>
+                    <tr>
+                        <th style="display:none;">ExamResultSerial</th>
+                        <th style="display:none;">Student Serial No</th>
+                        <th style="display:none;">ExamScheduleSerial</th>
+                        <th style="width: 80px; text-align: center;">No</th>
+                        <th>Full Name</th>
+                        <th>Reg No</th>
+                        <th style="width: 250px; text-align: center;">Attendance</th>
+                        <th style="width: 150px; text-align: center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var attendanceVal = Model[i].Attedance;
+                        var hasAttendance = !string.IsNullOrEmpty(attendanceVal);
+                        
+                        <tr>
+                            <td style="display:none;">
+                                <input type="hidden" name="ExamResultSerial" value="@(Model[i].ExamResultSerial.HasValue ? Model[i].ExamResultSerial : 0)" />
+                            </td>
+                            <td style="display:none;">
+                                <input type="hidden" name="StudentSerial" value="@Model[i].StudentSerial" />
+                            </td>
+                            <td style="display:none;">
+                                <input type="hidden" name="ExamScheduleSerial" value="@Model[i].ExamScheduleSerial" />
+                            </td>
+                            <td style="text-align: center; font-weight: 600; color: #64748b;">@(i + 1)</td>
+                            <td style="font-weight: 600; color: #1e293b;">@Model[i].FullName</td>
+                            <td style="font-family: monospace; font-size: 13px; color: #475569;">@Model[i].RegNo</td>
+                            <td style="text-align: center;">
+                                <div class="attendance-toggle-group">
+                                    <button type="button" class="attendance-btn present-btn @(attendanceVal == "Present" ? "active" : "")" data-val="Present">Present</button>
+                                    <button type="button" class="attendance-btn absent-btn @(attendanceVal == "Absent" ? "active" : "")" data-val="Absent">Absent</button>
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                @if (hasAttendance)
+                                {
+                                    <span class="save-status-badge badge-saved">Saved</span>
+                                }
+                                else
+                                {
+                                    <span class="save-status-badge badge-pending">Unmarked</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<script>
+    $(document).ready(function() {
+        // Unbind previous click events to prevent duplicates
+        $(document).off('click', '.attendance-btn').on('click', '.attendance-btn', function () {
+            var btn = $(this);
+            if (btn.hasClass('active')) return;
+
+            var group = btn.closest('.attendance-toggle-group');
+            group.find('.attendance-btn').removeClass('active');
+            btn.addClass('active');
+
+            var row = btn.closest('tr');
+            var studentserial = row.find('input[name="StudentSerial"]').val();
+            var examresultserial = row.find('input[name="ExamResultSerial"]').val();
+            var examscheduleserial = row.find('input[name="ExamScheduleSerial"]').val();
+            var attedance = btn.data('val');
+
+            var year = $('#year').val();
+            var batchserial = $('#batchserial').val();
+            var classserial = $('#classserial').val();
+            var termserial = $('#termserial').val();
+            var subjectserial = $('#subjectserial').val();
+            var examserial = $('#examserial').val();
+
+            var statusBadge = row.find('.save-status-badge');
+            statusBadge.removeClass('badge-saved badge-pending badge-error').addClass('badge-saving').html(' Saving...');
+
+            // Recalculate stats panel tallies immediately
+            if (typeof calculateStats === 'function') {
+                calculateStats();
+            }
+
+            $.ajax({
+                url: '/Exam/AttedanceFinal',
+                type: 'POST',
+                data: {
+                    studentserial: studentserial,
+                    attedance: attedance,
+                    examresultserial: examresultserial,
+                    year: year,
+                    batchserial: batchserial,
+                    classserial: classserial,
+                    termserial: termserial,
+                    subjectserial: subjectserial,
+                    examserial: examserial,
+                    examscheduleserial: examscheduleserial
+                },
+                success: function (res) {
+                    if (res.success) {
+                        statusBadge.removeClass('badge-saving badge-pending badge-error').addClass('badge-saved').html(' Saved');
+                        if (typeof syncResultSerials === 'function') {
+                            syncResultSerials();
+                        }
+                    } else {
+                        statusBadge.removeClass('badge-saving badge-pending').addClass('badge-error').html('' + res.message);
+                    }
+                },
+                error: function () {
+                    statusBadge.removeClass('badge-saving badge-pending').addClass('badge-error').html('Error');
+                }
+            });
+        });
+
+        // Bulk operations
+        $('#markAllPresent').off('click').on('click', function() {
+            $('tbody tr').each(function() {
+                var row = $(this);
+                if (row.is(':visible')) {
+                    var pBtn = row.find('.present-btn');
+                    if (!pBtn.hasClass('active')) {
+                        row.find('.attendance-btn').removeClass('active');
+                        pBtn.addClass('active');
+                        var badge = row.find('.save-status-badge');
+                        badge.removeClass('badge-saved badge-error').addClass('badge-pending').html('Unmarked');
+                    }
+                }
+            });
+        });
+
+        $('#markAllAbsent').off('click').on('click', function() {
+            $('tbody tr').each(function() {
+                var row = $(this);
+                if (row.is(':visible')) {
+                    var aBtn = row.find('.absent-btn');
+                    if (!aBtn.hasClass('active')) {
+                        row.find('.attendance-btn').removeClass('active');
+                        aBtn.addClass('active');
+                        var badge = row.find('.save-status-badge');
+                        badge.removeClass('badge-saved badge-error').addClass('badge-pending').html('Unmarked');
+                    }
+                }
+            });
+        });
+
+        $('#saveAllBtn').off('click').on('click', function() {
+            var items = [];
+            var year = $('#year').val();
+            var batchserial = $('#batchserial').val();
+            var classserial = $('#classserial').val();
+            var termserial = $('#termserial').val();
+            var subjectserial = $('#subjectserial').val();
+            var examserial = $('#examserial').val();
+
+            if (!year || !batchserial || !classserial || !termserial || !subjectserial || !examserial) {
+                alert("Please select all filters first.");
+                return;
+            }
+
+            $('tbody tr').each(function() {
+                var row = $(this);
+                var activeBtn = row.find('.attendance-btn.active');
+                if (activeBtn.length > 0) {
+                    var studentserial = row.find('input[name="StudentSerial"]').val();
+                    var examresultserial = row.find('input[name="ExamResultSerial"]').val();
+                    var examscheduleserial = row.find('input[name="ExamScheduleSerial"]').val();
+                    var attedance = activeBtn.data('val');
+
+                    items.push({
+                        StudentSerial: parseInt(studentserial),
+                        Attendance: attedance,
+                        ExamResultSerial: parseInt(examresultserial),
+                        ExamScheduleSerial: parseInt(examscheduleserial)
+                    });
+                }
+            });
+
+            if (items.length === 0) {
+                alert("No attendance selections to save.");
+                return;
+            }
+
+            var saveBtn = $(this);
+            saveBtn.prop('disabled', true).text('Saving All...');
+            $('.save-status-badge').removeClass('badge-saved badge-pending badge-error').addClass('badge-saving').html(' Saving...');
+
+            $.ajax({
+                url: '/Exam/SaveAllAttendanceFinal',
+                type: 'POST',
+                data: {
+                    itemsJson: JSON.stringify(items),
+                    year: year,
+                    batchserial: batchserial,
+                    classserial: classserial,
+                    termserial: termserial,
+                    subjectserial: subjectserial,
+                    examserial: examserial
+                },
+                success: function(res) {
+                    saveBtn.prop('disabled', false).text('Save All');
+                    if (res.success) {
+                        $('.save-status-badge').removeClass('badge-saving badge-pending badge-error').addClass('badge-saved').html(' Saved');
+                        alert(res.message);
+                        if (typeof searchStudents === 'function') {
+                            searchStudents(); // refresh grid to load new IDs
+                        }
+                    } else {
+                        alert("Error: " + res.message);
+                        $('.save-status-badge').removeClass('badge-saving').addClass('badge-error').html('Error');
+                    }
+                },
+                error: function() {
+                    saveBtn.prop('disabled', false).text('Save All');
+                    alert("An error occurred while saving all records.");
+                    $('.save-status-badge').removeClass('badge-saving').addClass('badge-error').html('Error');
+                }
+            });
+        });
+    });
+</script>

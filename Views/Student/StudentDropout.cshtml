@@ -1,0 +1,413 @@
+@{
+    ViewBag.Title = "StudentDropout";
+     Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<!-- StudentDropout.cshtml content -->
+
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSS -->
+    <link rel="stylesheet" href="@Url.Content("~/Content/StyleSheet4.css")" />
+
+
+<style>
+.addtable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+     background-color: #ffffff;
+}
+
+.addtable th, .addtable td {
+    border: 1px solid black !important;
+    padding: 8px;
+    text-align: center;
+}
+</style>
+
+
+    
+    @model List<MvcApplication1.Models.StudentDropoutModels>
+    @{
+     
+    }
+
+     <!-- Form -->
+  <div class="container d-flex flex-column align-items-center">
+    <h4 style="justify-content: center; text-align: center; max-width: 600px; width: 100%; margin: 1.5rem auto 10px auto; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;"><span id="formHeaderEmoji"></span> Student Dropout</h4>
+    @using (Html.BeginForm("StudentDropout", "Student", FormMethod.Post, new { enctype = "multipart/form-data", @class = "addform", id = "StudentDropoutform", onsubmit = "return validateDates();", style = "max-width: 600px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 15px;" }))
+    {
+        <!-- Form contents here -->
+        <input type="hidden" id="studentdropoutSerial" name="StudentDropoutSerial" />
+
+        <div class="d-flex flex-column gap-1">
+            <label for="year" style="font-weight: 600; color: #475569;">Year:</label>
+            @Html.DropDownList("Year",(SelectList)ViewBag.Years, "--Select Year--", new { @class = "form-control", @id = "year",  required = "required" })
+        </div>
+
+        <div class="d-flex flex-column gap-1">
+            <label for="batchserial" style="font-weight: 600; color: #475569;">Batch:</label>
+            <select id="batchserial" class="form-control" name="BatchSerial" required>
+                <option value="">-- Select Batch --</option>
+            </select>
+        </div>
+
+        <div class="d-flex flex-column gap-1">
+            <label for="classserial" style="font-weight: 600; color: #475569;">Class:</label>
+            <select id="classserial" class="form-control" name="ClassSerial" required>
+                <option value="">-- Select Class --</option>
+            </select>
+        </div>
+
+        <div class="d-flex flex-column gap-1">
+            <label for="studentSerial" style="font-weight: 600; color: #475569;">Student:</label>
+            @Html.DropDownList("StudentSerial", (SelectList)ViewBag.Students, "--Select Student--", new { @class = "form-control", @id = "studentSerial", required = "required" })
+        </div>
+
+        <div class="d-flex flex-column gap-1">
+            <label for="dropoutDate" style="font-weight: 600; color: #475569;">Dropout Date:</label>
+            <input type="date" id="dropoutDate" name="DropoutDate" required class="form-control">
+        </div>
+
+        <div class="d-flex flex-column gap-1">
+            <label for="dropoutReason" style="font-weight: 600; color: #475569;">Reason:</label>
+            <input type="text" id="dropoutReason" name="DropoutReason" required class="form-control" placeholder="Reason for dropout">
+        </div>
+
+        <div class="form-group text-center mt-4" style="display: flex !important; flex-direction: row !important; justify-content: center !important; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn btn-success" style="height: 44px; padding: 0 24px; font-weight: 600; border-radius: 10px; background-color: #10b981; color: white; border: none; cursor: pointer; min-width: 110px;">Dropout</button>
+            <button type="button" id="toggleListBtn" style="height: 44px; padding: 0 24px; font-weight: 600; border-radius: 10px; background-color: #0f172a; color: white; border: none; cursor: pointer; min-width: 110px;" onclick="toggleDropoutList()">Show List</button>
+            <button type="button" class="btn btn-danger" onclick="location.reload();" style="height: 44px; padding: 0 24px; font-weight: 600; border-radius: 10px; background-color: #ef4444 !important; color: white; border: none; cursor: pointer; min-width: 110px;">Cancel</button>
+        </div>
+    }
+
+
+<!-- Search and Filter Bar Container (Collapsible) -->
+<div id="studentsTableContainer" class="d-none">
+    <div class="addtable-container border-0 shadow-sm p-4 bg-white rounded-4" style="max-width: 900px; margin: 1.5rem auto 3rem auto;">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
+            <h4 class="m-0 border-0 p-0 d-flex align-items-center gap-2" style="font-size: 18px; font-weight: 700; color: #0f172a; border-bottom: none; width: auto; margin: 0;">
+                <span style="font-size: 22px; margin-right: 2px;">&#x1F393;</span> Dropout Students Table
+            </h4>
+            <!-- Force search controls to the right -->
+            <div class="d-flex gap-2 w-100 w-sm-auto justify-content-end" style="margin-left: auto;">
+                <div class="position-relative flex-grow-1" style="max-width: 300px;">
+                    <ion-icon name="search-outline" class="position-absolute text-muted" style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 18px;"></ion-icon>
+                    <input type="text" id="tableSearch" class="form-control filter-control ps-5" placeholder="Search Dropouts..." style="height: 40px; font-size: 14px; border-radius: 8px;" />
+                </div>
+                <select id="yearFilter" class="form-select filter-control" style="width: 140px; height: 40px; font-size: 14px; border-radius: 8px;">
+                    <option value="All">All Years</option>
+                    @if (ViewBag.Years != null)
+                    {
+                        foreach (var yr in ViewBag.Years as SelectList)
+                        {
+                            <option value="@yr.Value">@yr.Text</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <table class="table addtable align-middle" id="studentsTable" style="margin-bottom: 0 !important; width: 100%;">
+            <thead>
+                <tr>
+                    <th style="display:none;">Serial No</th> 
+                    <th style="width: 60px;">No</th>
+                    <th>Year</th>
+                    <th style="display:none;">BatchSerial</th>
+                    <th style="display:none;">ClassSerial</th>
+                    <th>Class</th>
+                    <th>Student Name</th>
+                    <th style="display:none;">StudentSerial</th>
+                    <th>Dropout Date</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var drop in Model)
+                {
+                    <tr onclick="fillForm(this)">
+                        <td style="display:none;">@drop.StudentDropoutSerial</td>
+                        <td class="col-no">@drop.No</td>
+                        <td class="col-year">@drop.Year</td>
+                        <td style="display:none;">@drop.BatchSerial</td>
+                        <td style="display:none;">@drop.ClassSerial</td>
+                        <td class="col-class">@drop.ClassName</td>
+                        <td class="col-fullname">@drop.FullName</td>
+                        <td style="display:none;">@drop.StudentSerial</td>
+                        <td class="col-date">@drop.DropoutDate.ToString("yyyy-MM-dd")</td>
+                        <td class="col-reason">@drop.DropoutReason</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-5 d-none">
+            <ion-icon name="search-outline" class="text-muted mb-2" style="font-size: 40px; opacity: 0.5;"></ion-icon>
+            <h5 class="text-muted fw-normal" style="font-size: 16px;">No matching dropouts found</h5>
+        </div>
+    </div>
+</div>
+</div>
+
+     @if (TempData["Message"] != null)
+     {
+    <script>
+        window.onload = function () {
+            var toastLive = document.getElementById('liveToast');
+            var toast = new bootstrap.Toast(toastLive);
+            toast.show();
+        };
+    </script>
+     }
+
+    
+@section Scripts {
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#formHeaderEmoji').html('&#x2795;');
+
+        // Set up search and filter listeners
+        $("#tableSearch").on("keyup input", filterTable);
+        $("#yearFilter").on("change", filterTable);
+
+        // log and bind year change
+        $('#year').change(function () {
+            var selectedYear = $('#year').val();
+            loadbatches(selectedYear);
+        });
+
+        $('#batchserial').change(function () {
+            var selectedbatch = $('#batchserial').val();
+            loadClasses(selectedbatch);
+        });
+    });
+
+    function loadbatches(year) {
+        if (year) {
+            $.ajax({
+                url: '/Student/GetBatchesByYear',
+                type: 'GET',
+                data: { year: year },
+                success: function (data) {
+                    console.log("Batches received:", data); // debug
+                    var batchDropdown = $('#batchserial');
+                    batchDropdown.empty();
+                    batchDropdown.append('<option value="">-- Select Batch --</option>');
+                    $.each(data, function (i, batch) {
+                        batchDropdown.append('<option value="' + batch.Value + '">' + batch.Text + '</option>');
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error loading batches:", error);
+                    alert('Failed to load batches.');
+                }
+            });
+        }
+    }
+
+    function loadClasses(batchserial) {
+        if (batchserial) {
+            $.ajax({
+                url: '/Student/GetClassesByBatch',
+                type: 'GET',
+                data: { batchserial: batchserial },
+                success: function (data) {
+                    var classDropdown = $('#classserial');
+                    classDropdown.empty().append('<option value="">-- Select Class --</option>');
+                    $.each(data, function (i, item) {
+                        classDropdown.append('<option value="' + item.Value + '">' + item.Text + '</option>');
+                    });
+                }
+            });
+        }
+    }
+
+    function loadStudents(year, batchserial, classserial) {
+        if (year && batchserial && classserial) {
+            console.log("Loading students with:", year, batchserial, classserial);
+            $.ajax({
+                url: '/Student/GetStudentsByYearBatchClassWithDropout',
+                type: 'GET',
+                data: {
+                    year: year,
+                    batchserial: batchserial,
+                    classserial: classserial
+                },
+                success: function (data) {
+                    var studentDropdown = $('#studentSerial');
+                    studentDropdown.empty();
+                    studentDropdown.append('<option value="">--Select Student--</option>');
+                    $.each(data, function (i, student) {
+                        studentDropdown.append('<option value="' + student.Value + '">' + student.Text + '</option>');
+                    });
+                },
+                error: function () {
+                    alert('Failed to load students.');
+                }
+            });
+        }
+    }
+
+    // Trigger when any dropdown changes
+    $(document).on('change', '#year, #batchserial, #classserial', function () {
+        var selectedYear = $('#year').val();
+        var selectedbatch = $('#batchserial').val();
+        var selectedclass = $('#classserial').val();
+        loadStudents(selectedYear, selectedbatch, selectedclass);
+    });
+</script>
+        
+
+ <script>
+     function fillForm(row) {
+         var cells = row.getElementsByTagName("td");
+
+         document.getElementById("studentdropoutSerial").value = cells[0].innerText.trim();
+         document.getElementById("year").value = cells[2].innerText.trim();
+         document.getElementById("batchserial").value = cells[3].innerText.trim();
+         document.getElementById("classserial").value = cells[4].innerText.trim();
+         document.getElementById("studentSerial").value = cells[7].innerText.trim();
+         document.getElementById("dropoutDate").value = cells[8].innerText.trim();
+         document.getElementById("dropoutReason").value = cells[9].innerText.trim();
+
+            const year = row.cells[2].innerText.trim();
+            const batchserial = row.cells[3].innerText.trim();
+            const classserial =  row.cells[4].innerText.trim();
+         const studentSerial =  row.cells[7].innerText.trim();
+
+
+
+         // Load batches for year
+            $.get('/Student/GetBatchesByYear', { year: year }, function (batches) {
+                var $batchDropdown = $('#batchserial');
+                $batchDropdown.empty().append('<option value="">-- Select Batch --</option>');
+                $.each(batches, function (i, batch) {
+                    $batchDropdown.append(`<option value="${batch.Value}">${batch.Text}</option>`);
+                });
+
+                // Set batch value
+                $batchDropdown.val(batchserial);
+
+                // Load classes for batch
+                $.get('/Student/GetClassesByBatch', { batchSerial: batchserial }, function (classes) {
+                    var $classDropdown = $('#classserial');
+                    $classDropdown.empty().append('<option value="">-- Select Class --</option>');
+                    $.each(classes, function (i, cls) {
+                        $classDropdown.append(`<option value="${cls.Value}">${cls.Text}</option>`);
+                    });
+
+                    // Set class value
+                    $classDropdown.val(classserial);
+
+
+                    // Load students for year, batch, class
+                    $.get('/Student/GetStudentsByYearBatchClassWithDropout', {year: year,  batchSerial: batchserial, classserial:classserial }, function (students) {
+                        var $studentDropdown = $('#studentSerial');
+                        $studentDropdown.empty().append('<option value="">-- Select Student --</option>');
+                        $.each(students, function (i, stu) {
+                            $studentDropdown.append(`<option value="${stu.Value}">${stu.Text}</option>`);
+                        });
+
+                        // Set student value
+                        $studentDropdown.val(studentSerial);
+
+                    });
+
+                });
+            });
+
+            document.getElementById("batchserial").value = cells[3].innerText.trim();
+          document.getElementById("classserial").value = cells[4].innerText.trim();
+          document.getElementById("studentSerial").value = cells[7].innerText.trim();
+
+         
+     }
+</script>
+
+<script>
+    function validateDates() {
+    var today = new Date().toISOString().split("T")[0];
+
+    var dropoutDate = document.getElementById("dropoutDate").value;
+
+
+
+    if (dropoutDate > today) {
+    alert("Dropout Date cannot be in the future.");
+    return false;
+}
+
+return true;
+}
+
+// Toggle Dropout Table List visibility
+function toggleDropoutList() {
+    var container = $("#studentsTableContainer");
+    var btn = $("#toggleListBtn");
+    if (container.hasClass("d-none")) {
+        container.removeClass("d-none");
+        btn.text("Hide List").css("background-color", "#475569");
+        container[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+        container.addClass("d-none");
+        btn.text("Show List").css("background-color", "#0f172a");
+    }
+}
+
+// Search & Filter functionality
+function filterTable() {
+    var searchQuery = $("#tableSearch").val().toLowerCase();
+    var yearFilter = $("#yearFilter").val();
+    var visibleRows = 0;
+
+    $("#studentsTable tbody tr").each(function () {
+        var row = $(this);
+        var regNo = "";
+        var fullName = row.find(".col-fullname").text().trim().toLowerCase();
+        var className = row.find(".col-class").text().trim().toLowerCase();
+        var yearText = row.find(".col-year").text().trim().toLowerCase();
+        var reasonText = row.find(".col-reason").text().trim().toLowerCase();
+
+        var matchesSearch = fullName.indexOf(searchQuery) > -1 ||
+            className.indexOf(searchQuery) > -1 ||
+            yearText.indexOf(searchQuery) > -1 ||
+            reasonText.indexOf(searchQuery) > -1;
+
+        var matchesYear = (yearFilter === "All" || yearText === yearFilter.toLowerCase());
+
+        if (matchesSearch && matchesYear) {
+            row.removeClass("d-none");
+            visibleRows++;
+        } else {
+            row.addClass("d-none");
+        }
+    });
+
+    if (visibleRows === 0) {
+        $("#emptyState").removeClass("d-none");
+        $("#studentsTable").addClass("d-none");
+    } else {
+        $("#emptyState").addClass("d-none");
+        $("#studentsTable").removeClass("d-none");
+    }
+}
+</script>
+
+ 
+ <script>
+     setTimeout(function () {
+         const alert = document.querySelector('.alert');
+         if (alert) {
+             alert.style.display = 'none';
+         }
+     }, 3000); // Hide after 3 seconds
+</script>
+}

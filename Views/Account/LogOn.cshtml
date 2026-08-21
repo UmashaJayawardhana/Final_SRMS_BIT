@@ -1,0 +1,225 @@
+@model MvcApplication1.Models.LogOnModel
+@{
+    ViewBag.Title = "Log On";
+    Layout = null; 
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - SRMS</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Remix Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css" crossorigin="anonymous" />
+
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="@Url.Content("~/Content/StyleSheet1.css")" />
+
+    <style>
+        .login__box {
+            position: relative;
+            text-align: left;
+        }
+
+        .login__input {
+            padding-left: 46px !important;
+            padding-right: 46px !important;
+        }
+
+        .input-icon-left {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 1.25rem;
+            pointer-events: none;
+            z-index: 5;
+            transition: color 0.3s ease;
+        }
+
+        .login__box:focus-within .input-icon-left {
+            color: #3b82f6;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 5;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease;
+        }
+
+        .password-toggle-btn:hover {
+            color: #ffffff;
+        }
+
+        .caps-warning {
+            display: none;
+            font-size: 0.8rem;
+            color: #f59e0b;
+            margin-top: 6px;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+        }
+
+        .school-brand-header {
+            margin-bottom: 1.75rem;
+        }
+
+        .school-brand-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(96, 165, 250, 0.1) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #60a5fa;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle-text {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-top: -1.25rem;
+            margin-bottom: 1.75rem;
+        }
+    </style>
+
+    <!-- jQuery & Validation -->
+    <script src="@Url.Content("~/Scripts/jquery-3.6.0.min.js")"></script>
+    <script src="@Url.Content("~/Scripts/jquery.validate.min.js")"></script>
+    <script src="@Url.Content("~/Scripts/jquery.validate.unobtrusive.min.js")"></script>
+</head>
+<body>
+    <div class="login">
+        @using (Html.BeginForm("LogOn", "Account", FormMethod.Post, new { @class = "login__form", id = "logOnForm" }))
+        {
+            <div class="school-brand-header">
+                <div class="school-brand-icon">
+                    <i class="ri-graduation-cap-line"></i>
+                </div>
+                <div>
+                    <h1 class="login__title m-0">SRMS</h1>
+                </div>
+            </div>
+            <p class="subtitle-text">Student Result Management System</p>
+
+            @Html.ValidationSummary(true, "Login was unsuccessful. Please correct the errors and try again.", new { @class = "validation-summary-errors" })
+
+            <div class="login__inputs">
+                <!-- Username Box -->
+                <div class="login__box">
+                    <i class="ri-user-3-line input-icon-left"></i>
+                    @Html.TextBoxFor(m => m.UserName, new { @class = "login__input", placeholder = "Username", required = "required", autocomplete = "username", id = "inputUsername" })
+                    @Html.ValidationMessageFor(m => m.UserName)
+                </div>
+
+                <!-- Password Box -->
+                <div class="login__box">
+                    <i class="ri-lock-2-line input-icon-left"></i>
+                    @Html.PasswordFor(m => m.Password, new { @class = "login__input", placeholder = "Password", required = "required", autocomplete = "current-password", id = "inputPassword" })
+                    <button type="button" class="password-toggle-btn" id="btnTogglePassword" title="Toggle password visibility">
+                        <i class="ri-eye-line" id="iconTogglePassword"></i>
+                    </button>
+                    @Html.ValidationMessageFor(m => m.Password)
+                    <div class="caps-warning" id="capsWarning">
+                        <i class="ri-error-warning-line"></i> Caps Lock is ON
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="login__button" id="btnSubmitLogin">
+                <span>Login</span> <i class="ri-arrow-right-line ms-1"></i>
+            </button>
+        }
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="liveToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    @TempData["Message"]
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Show password toggle
+            $('#btnTogglePassword').on('click', function (e) {
+                e.preventDefault();
+                const input = $('#inputPassword');
+                const icon = $('#iconTogglePassword');
+
+                if (input.attr('type') === 'password') {
+                    input.attr('type', 'text');
+                    icon.removeClass('ri-eye-line').addClass('ri-eye-off-line');
+                } else {
+                    input.attr('type', 'password');
+                    icon.removeClass('ri-eye-off-line').addClass('ri-eye-line');
+                }
+            });
+
+            // Caps lock detection
+            $('#inputPassword').on('keyup keydown', function (e) {
+                if (e.originalEvent && typeof e.originalEvent.getModifierState === 'function') {
+                    const isCaps = e.originalEvent.getModifierState('CapsLock');
+                    if (isCaps) {
+                        $('#capsWarning').css('display', 'flex');
+                    } else {
+                        $('#capsWarning').css('display', 'none');
+                    }
+                }
+            });
+
+            // Submit loading state
+            $('#logOnForm').on('submit', function () {
+                const btn = $('#btnSubmitLogin');
+                btn.prop('disabled', true);
+                btn.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Logging in...');
+            });
+
+            // Toast handler
+            @if (TempData["Message"] != null)
+            {
+                <text>
+                var toastLive = document.getElementById('liveToast');
+                if (toastLive) {
+                    var toast = new bootstrap.Toast(toastLive);
+                    toast.show();
+                }
+                </text>
+            }
+        });
+    </script>
+</body>
+</html>

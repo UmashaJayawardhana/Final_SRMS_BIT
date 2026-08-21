@@ -1,0 +1,370 @@
+@model MvcApplication1.Models.RegisterModel
+
+@{
+    ViewBag.Title = "Register";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    int minLength = Membership.MinRequiredPasswordLength;
+}
+
+<style>
+    .register-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+        max-width: 650px;
+        margin: 1rem auto;
+        overflow: hidden;
+    }
+
+    .register-header {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #ffffff;
+        padding: 2rem 2.5rem;
+        position: relative;
+    }
+
+    .register-header h3 {
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        font-size: 1.5rem;
+    }
+
+    .register-header p {
+        color: #94a3b8;
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+
+    .register-body {
+        padding: 2.25rem 2.5rem;
+    }
+
+    .custom-input-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .custom-input-group ion-icon.input-icon {
+        position: absolute;
+        left: 14px;
+        font-size: 1.25rem;
+        color: #64748b;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .custom-input-group .form-control {
+        padding-left: 44px;
+        padding-right: 44px;
+        height: 48px;
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        font-weight: 500;
+        color: #1e293b;
+        background-color: #f8fafc;
+        transition: all 0.2s ease;
+    }
+
+    .custom-input-group .form-control:focus {
+        background-color: #ffffff;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    }
+
+    .password-toggle-btn {
+        position: absolute;
+        right: 12px;
+        background: none;
+        border: none;
+        color: #64748b;
+        font-size: 1.25rem;
+        cursor: pointer;
+        z-index: 5;
+        padding: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: color 0.2s ease;
+    }
+
+    .password-toggle-btn:hover {
+        color: #1e293b;
+    }
+
+    .strength-meter-container {
+        margin-top: 10px;
+    }
+
+    .strength-meter {
+        height: 6px;
+        border-radius: 4px;
+        background-color: #e2e8f0;
+        overflow: hidden;
+        margin-top: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .strength-meter-bar {
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
+
+    .req-list {
+        list-style: none;
+        padding-left: 0;
+        margin-top: 10px;
+        font-size: 0.82rem;
+    }
+
+    .req-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #64748b;
+        margin-bottom: 4px;
+        transition: color 0.2s ease;
+    }
+
+    .req-item.valid {
+        color: #10b981;
+        font-weight: 600;
+    }
+
+    .req-item ion-icon {
+        font-size: 1rem;
+    }
+
+    #passwordMatchFeedback {
+        font-size: 0.85rem;
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+    }
+
+    .btn-register-submit {
+        height: 50px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 12px;
+        background-color: #3b82f6;
+        border: none;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+        transition: all 0.25s ease;
+        width: 100%;
+    }
+
+    .btn-register-submit:hover {
+        background-color: #2563eb;
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(59, 130, 246, 0.35);
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <div class="register-card">
+        <div class="register-header">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(59, 130, 246, 0.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #60a5fa;">
+                    <ion-icon name="person-add-outline"></ion-icon>
+                </div>
+                <div>
+                    <h3>Create New Account</h3>
+                    <p>Enter details below to create a new system account</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="register-body">
+            @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { id = "registerForm" }))
+            {
+                @Html.ValidationSummary(true, "Account creation was unsuccessful. Please correct the errors and try again.", new { @class = "alert alert-danger border-0 rounded-3 mb-4 small" })
+
+                <!-- Username -->
+                <div class="mb-3">
+                    <label class="form-label text-dark fw-semibold small mb-1">Username <span class="text-danger">*</span></label>
+                    <div class="custom-input-group">
+                        <ion-icon name="at-outline" class="input-icon"></ion-icon>
+                        @Html.TextBoxFor(m => m.UserName, new { @class = "form-control", placeholder = "Choose a unique username", required = "required", autocomplete = "off" })
+                    </div>
+                    @Html.ValidationMessageFor(m => m.UserName, "", new { @class = "text-danger small mt-1 d-block" })
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label class="form-label text-dark fw-semibold small mb-1">Email Address <span class="text-danger">*</span></label>
+                    <div class="custom-input-group">
+                        <ion-icon name="mail-outline" class="input-icon"></ion-icon>
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email", placeholder = "name@example.com", required = "required", autocomplete = "email" })
+                    </div>
+                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger small mt-1 d-block" })
+                </div>
+
+                <!-- Password -->
+                <div class="mb-3">
+                    <label class="form-label text-dark fw-semibold small mb-1">Password <span class="text-danger">*</span></label>
+                    <div class="custom-input-group">
+                        <ion-icon name="lock-closed-outline" class="input-icon"></ion-icon>
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Create a strong password", required = "required", id = "inputRegPassword" })
+                        <button type="button" class="password-toggle-btn me-1" title="Toggle password visibility">
+                            <ion-icon name="eye-outline"></ion-icon>
+                        </button>
+                    </div>
+                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger small mt-1 d-block" })
+
+                    <!-- Password Strength Meter & Requirement List -->
+                    <div class="strength-meter-container">
+                        <div class="d-flex justify-content-between align-items-center small">
+                            <span class="text-muted fw-semibold" style="font-size: 0.78rem;">Password Strength:</span>
+                            <span id="strengthText" class="fw-bold" style="font-size: 0.78rem; color: #94a3b8;">None</span>
+                        </div>
+                        <div class="strength-meter">
+                            <div class="strength-meter-bar" id="strengthBar"></div>
+                        </div>
+
+                        <ul class="req-list">
+                            <li class="req-item" id="reqLength">
+                                <ion-icon name="close-circle-outline"></ion-icon> At least @minLength characters
+                            </li>
+                            <li class="req-item" id="reqLetter">
+                                <ion-icon name="close-circle-outline"></ion-icon> Contains letters (A-Z, a-z)
+                            </li>
+                            <li class="req-item" id="reqNumber">
+                                <ion-icon name="close-circle-outline"></ion-icon> Contains numbers (0-9)
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="mb-4">
+                    <label class="form-label text-dark fw-semibold small mb-1">Confirm Password <span class="text-danger">*</span></label>
+                    <div class="custom-input-group">
+                        <ion-icon name="shield-checkmark-outline" class="input-icon"></ion-icon>
+                        @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control", placeholder = "Re-enter your password", required = "required", id = "inputRegConfirmPassword" })
+                        <button type="button" class="password-toggle-btn me-1" title="Toggle password visibility">
+                            <ion-icon name="eye-outline"></ion-icon>
+                        </button>
+                    </div>
+                    @Html.ValidationMessageFor(m => m.ConfirmPassword, "", new { @class = "text-danger small mt-1 d-block" })
+                    <div id="passwordMatchFeedback"></div>
+                </div>
+
+                <!-- Action Button -->
+                <button type="submit" class="btn btn-register-submit" id="btnSubmitRegister">
+                    <ion-icon name="person-add-outline" class="me-1"></ion-icon> Register Account
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const minLength = @minLength;
+
+            // Password Toggle
+            $('.password-toggle-btn').on('click', function (e) {
+                e.preventDefault();
+                const input = $(this).siblings('input');
+                const icon = $(this).find('ion-icon');
+
+                if (input.attr('type') === 'password') {
+                    input.attr('type', 'text');
+                    icon.attr('name', 'eye-off-outline');
+                } else {
+                    input.attr('type', 'password');
+                    icon.attr('name', 'eye-outline');
+                }
+            });
+
+            // Live Password Strength Meter
+            $('#inputRegPassword').on('keyup input', function () {
+                const val = $(this).val();
+
+                const hasLen = val.length >= minLength;
+                const hasLet = /[A-Za-z]/.test(val);
+                const hasNum = /\d/.test(val);
+
+                updateReq('#reqLength', hasLen);
+                updateReq('#reqLetter', hasLet);
+                updateReq('#reqNumber', hasNum);
+
+                let score = 0;
+                if (val.length > 0) score += 1;
+                if (hasLen) score += 1;
+                if (hasLet && hasNum) score += 1;
+                if (val.length >= (minLength + 4) && hasLet && hasNum) score += 1;
+
+                const bar = $('#strengthBar');
+                const label = $('#strengthText');
+
+                if (val.length === 0) {
+                    bar.css({ width: '0%', backgroundColor: '#e2e8f0' });
+                    label.text('None').css('color', '#94a3b8');
+                } else if (score <= 2) {
+                    bar.css({ width: '33%', backgroundColor: '#ef4444' });
+                    label.text('Weak').css('color', '#ef4444');
+                } else if (score === 3) {
+                    bar.css({ width: '66%', backgroundColor: '#f59e0b' });
+                    label.text('Fair').css('color', '#f59e0b');
+                } else {
+                    bar.css({ width: '100%', backgroundColor: '#10b981' });
+                    label.text('Strong').css('color', '#10b981');
+                }
+
+                checkPasswordMatch();
+            });
+
+            function updateReq(selector, isValid) {
+                const item = $(selector);
+                const icon = item.find('ion-icon');
+                if (isValid) {
+                    item.addClass('valid');
+                    icon.attr('name', 'checkmark-circle');
+                } else {
+                    item.removeClass('valid');
+                    icon.attr('name', 'close-circle-outline');
+                }
+            }
+
+            // Confirm Password Match Check
+            $('#inputRegConfirmPassword').on('keyup input', function () {
+                checkPasswordMatch();
+            });
+
+            function checkPasswordMatch() {
+                const newPass = $('#inputRegPassword').val();
+                const confirmPass = $('#inputRegConfirmPassword').val();
+                const feedback = $('#passwordMatchFeedback');
+
+                if (confirmPass.length === 0) {
+                    feedback.html('');
+                    return;
+                }
+
+                if (newPass === confirmPass) {
+                    feedback.removeClass('text-danger').addClass('text-success')
+                            .html('<ion-icon name="checkmark-circle-outline" style="font-size:1.1rem;"></ion-icon> Passwords match.');
+                } else {
+                    feedback.removeClass('text-success').addClass('text-danger')
+                            .html('<ion-icon name="close-circle-outline" style="font-size:1.1rem;"></ion-icon> Passwords do not match.');
+                }
+            }
+
+            // Submit Spinner
+            $('#registerForm').on('submit', function () {
+                const btn = $('#btnSubmitRegister');
+                btn.prop('disabled', true);
+                btn.html('<span class="spinner-border spinner-border-sm me-2"></span> Creating Account...');
+            });
+        });
+    </script>
+}

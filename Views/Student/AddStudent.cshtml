@@ -1,0 +1,698 @@
+@model List<MvcApplication1.Models.StudentModels>
+@{
+ViewBag.Title = "Student";
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="@Url.Content("~/Content/StyleSheet3.css")" />
+
+<style>
+    /* Scoped styling for AddStudent enhancements */
+
+    /* Stats Cards */
+    .stat-card {
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+}
+.stat-card:hover {
+transform: translateY(-2px);
+box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02) !important;
+}
+.bg-primary-subtle {
+background-color: rgba(59, 130, 246, 0.08) !important;
+}
+.bg-success-subtle {
+background-color: rgba(34, 197, 94, 0.08) !important;
+}
+
+/* Custom Grid Form Container to ensure strict 2-column layout */
+.form-grid-container {
+display: grid !important;
+grid-template-columns: 1fr 1fr !important;
+column-gap: 24px !important;
+row-gap: 0 !important;
+}
+@@media (max-width: 768px) {
+.form-grid-container {
+grid-template-columns: 1fr !important;
+}
+}
+/* Ensure form-group elements inside grid container align nicely */
+.form-grid-container .form-group {
+display: flex !important;
+flex-direction: column !important;
+gap: 6px !important;
+margin-bottom: 1.25rem !important;
+}
+
+/* Table Search and Filters */
+.filter-control:focus {
+border-color: #3b82f6;
+box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+outline: none;
+}
+
+/* Edit Mode dynamic classes */
+.addform.editing-state {
+border: 2px solid #8b5cf6 !important;
+box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.15), 0 8px 10px -6px rgba(139, 92, 246, 0.08) !important;
+}
+.editing-row {
+background-color: rgba(139, 92, 246, 0.06) !important;
+border-left: 4px solid #8b5cf6 !important;
+}
+.editing-row td {
+font-weight: 500;
+color: #6d28d9 !important;
+}
+
+/* Row selection highlight */
+.addtable tbody tr.table-active-row {
+background-color: rgba(59, 130, 246, 0.08) !important;
+border-left: 4px solid #3b82f6 !important;
+}
+
+/* Smooth transitions */
+.addform, .addtable tr {
+transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>
+
+<!-- Metrics / Statistics Panel -->
+<div class="row g-3 mb-4" style="max-width: 900px; margin: 0 auto 1.5rem auto;">
+    <div class="col-md-6">
+        <div class="card stat-card border-0 shadow-sm p-3 d-flex flex-row align-items-center gap-3">
+            <div class="stat-icon bg-primary-subtle text-primary rounded-3 p-3 d-flex align-items-center justify-content-center" style="font-size: 24px; width: 56px; height: 56px;">
+                <ion-icon name="people-outline"></ion-icon>
+            </div>
+            <div>
+                <h6 class="text-muted mb-1 fw-semibold text-uppercase" style="font-size: 11px; letter-spacing: 0.5px; margin: 0;">Total Students</h6>
+                <h3 class="mb-0 fw-bold" id="statTotalStudents" style="margin: 0;">0</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card stat-card border-0 shadow-sm p-3 d-flex flex-row align-items-center gap-3">
+            <div class="stat-icon bg-success-subtle text-success rounded-3 p-3 d-flex align-items-center justify-content-center" style="font-size: 24px; width: 56px; height: 56px;">
+                <ion-icon name="checkmark-circle-outline"></ion-icon>
+            </div>
+            <div>
+                <h6 class="text-muted mb-1 fw-semibold text-uppercase" style="font-size: 11px; letter-spacing: 0.5px; margin: 0;">Active Students</h6>
+                <h3 class="mb-0 fw-bold" id="statActiveStudents" style="margin: 0;">0</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Form -->
+@using (Html.BeginForm("AddStudent", "Student", FormMethod.Post, new { enctype = "multipart/form-data", @class = "addform", id = "addStudentForm", onsubmit = "return validateDates();", style = "max-width: 900px;" }))
+{
+    <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-2">
+        <h4 id="formHeader" class="m-0 border-0 p-0 d-flex align-items-center gap-2" style="font-size: 18px; font-weight: 700; color: #0f172a; width: 100%; border-bottom: none;">
+            <span id="formHeaderEmoji">&#x2795;</span> <span id="formHeaderText">Register New Student</span>
+        </h4>
+        <span id="formBadge" class="badge bg-purple text-white px-2 py-1" style="display: none; background-color: #8b5cf6; font-size: 11px; font-weight: 600; border-radius: 6px;">EDIT MODE</span>
+    </div>
+
+    <input type="hidden" id="studentserial" name="StudentSerial" />
+
+    <!-- Student Image Preview -->
+    <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+        <img id="studentImage" src="" alt="Student Image" style="width:150px; height:150px; display:none; border-radius: 12px; border: 2px solid #e2e8f0; object-fit: cover;" />
+    </div>
+
+    <div class="form-grid-container">
+        <div class="form-group mb-3">
+            <label for="regno" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Reg No:</label>
+            <input type="text" id="regno" name="RegNo" value="@ViewBag.RegNo" readonly style="background-color: #e2e8f0;" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="status" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Status:</label>
+            <select id="status" name="Status" required>
+                <option value="Active">Active</option>
+               @* <option value="Inactive">Inactive</option>
+                <option value="Dropout">Dropout</option>*@
+            </select>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="firstname" style="font-weight: 600; color: #475569; margin-bottom: 6px;">First Name:</label>
+            <input type="text" id="firstname" name="FirstName" required placeholder="First Name" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="lastname" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Last Name:</label>
+            <input type="text" id="lastname" name="LastName" required placeholder="Last Name" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="initials" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Initials:</label>
+            <input type="text" id="initials" name="Initials" required placeholder="e.g. A.B." />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="fullname" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Full Name:</label>
+            <input type="text" id="fullname" name="FullName" required placeholder="Full Name" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="gender" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Gender:</label>
+            <select id="gender" name="Gender" required>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="dateofbirth" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Date of Birth:</label>
+            <input type="date" id="dateofbirth" name="DateofBirth" required class="form-control" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="address1" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Address 1:</label>
+            <input type="text" id="address1" name="Address1" required placeholder="Address Line 1" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="address2" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Address 2:</label>
+            <input type="text" id="address2" name="Address2" required placeholder="Address Line 2" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="address3" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Address 3:</label>
+            <input type="text" id="address3" name="Address3" placeholder="Address Line 3 (Optional)" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="city" style="font-weight: 600; color: #475569; margin-bottom: 6px;">City:</label>
+            <input type="text" id="city" name="City" required placeholder="City" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="residencephone" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Residence Phone:</label>
+            <input type="text" id="residencephone" name="ResidencePhone" required placeholder="10-digit Phone Number" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="admissiondate" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Admission Date:</label>
+            <input type="date" id="admissiondate" name="AdmissionDate" required class="form-control" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="guardiantype" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Guardian Type:</label>
+            <select id="guardiantype" name="GuardianType" required>
+                <option value="Father">Father</option>
+                <option value="Mother">Mother</option>
+                <option value="Guardian">Guardian</option>
+            </select>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="guardianname" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Guardian Name:</label>
+            <input type="text" id="guardianname" name="GuardianName" required placeholder="Guardian Name" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="guardianphone" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Guardian Phone:</label>
+            <input type="text" id="guardianphone" name="GuardianPhone" required placeholder="10-digit Phone Number" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="image" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Image of Student:</label>
+            <input type="file" id="image" name="Photo" class="form-control" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label style="font-weight: 600; color: #475569; margin-bottom: 6px;">User Account:</label>
+            <div class="d-flex align-items-center gap-2 p-2 border rounded-3 bg-light" style="height: 44px;">
+                <input type="checkbox" id="createUserAccount" name="CreateUserAccount" value="true" style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;" />
+                <label for="createUserAccount" style="font-weight: 600; color: #1e293b; cursor: pointer; margin: 0; font-size: 13.5px;">Create User Account</label>
+            </div>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="yearDropdown" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Year:</label>
+            @Html.DropDownList("Year", (SelectList)ViewBag.Years, "Select Year", new { @class = "form-control", @id = "yearDropdown", required = "required" })
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="batchserial" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Batch:</label>
+            <select id="batchserial" class="form-control" name="BatchSerial" required>
+                <option value="">-- Select Batch --</option>
+            </select>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="classserial" style="font-weight: 600; color: #475569; margin-bottom: 6px;">Class:</label>
+            <select id="classserial" class="form-control" name="ClassSerial" required>
+                <option value="">-- Select Class --</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Actions Buttons -->
+    <div style="display: flex !important; flex-direction: row !important; gap: 12px; justify-content: center; margin-top: 24px;">
+        <button type="submit" id="saveBtn" style="height: 44px; padding: 0 24px; font-weight: 600; border-radius: 10px; background-color: #3b82f6; color: white; border: none; cursor: pointer; min-width: 110px;">Save</button>
+        <button type="button" id="toggleListBtn" style="height: 44px; padding: 0 24px; font-weight: 600; border-radius: 10px; background-color: #0f172a; color: white; border: none; cursor: pointer; min-width: 110px;" onclick="toggleStudentList()">Show List</button>
+        <button type="button" id="cancelBtn" style="height: 44px; padding: 0 24px; font-weight: 600; border-radius: 10px; background-color: #ef4444 !important; color: white; border: none; cursor: pointer; min-width: 110px;" onclick="resetStudentForm();">Cancel</button>
+    </div>
+}
+
+<br />
+
+<!-- Search and Filter Bar Container (Collapsible) -->
+<div id="studentsTableContainer" class="d-none">
+    <div class="addtable-container border-0 shadow-sm p-4 bg-white rounded-4" style="max-width: 900px; margin: 1.5rem auto 3rem auto;">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
+            <h4 class="m-0 border-0 p-0 d-flex align-items-center gap-2" style="font-size: 18px; font-weight: 700; color: #0f172a; border-bottom: none; width: auto;">
+                <span style="font-size: 22px; margin-right: 2px;">&#x1F393;</span> Student List
+            </h4>
+            <!-- Force search controls to the right -->
+            <div class="d-flex gap-2 w-100 w-sm-auto justify-content-end" style="margin-left: auto;">
+                <div class="position-relative flex-grow-1" style="max-width: 300px;">
+                    <ion-icon name="search-outline" class="position-absolute text-muted" style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 18px;"></ion-icon>
+                    <input type="text" id="tableSearch" class="form-control filter-control ps-5" placeholder="Search Students..." style="height: 40px; font-size: 14px; border-radius: 8px;" />
+                </div>
+                <select id="statusFilter" class="form-select filter-control" style="width: 140px; height: 40px; font-size: 14px; border-radius: 8px;">
+                    <option value="All">All Status</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Dropout">Dropout</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <table class="table addtable align-middle" id="studentsTable" style="margin-bottom: 0 !important;">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">No</th>
+                    <th>Reg No</th>
+                    <th>Full Name</th>
+                    <th>Gender</th>
+                    <th>City</th>
+                    <th>Admission Date</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null)
+                {
+                    foreach (var student in Model)
+                    {
+                        <tr onclick="fillStudentForm(this)">
+                            <td class="col-no">@student.No</td>
+                            <td class="col-regno fw-semibold text-dark">@student.RegNo</td>
+                            <td class="col-fullname">@student.FullName</td>
+                            <td class="col-gender">@student.Gender</td>
+                            <td class="col-city">@student.City</td>
+                            <td class="col-admissiondate">@student.AdmissionDate.ToString("yyyy-MM-dd")</td>
+                            <td class="col-phone text-muted">@student.ResidencePhone</td>
+                            <td class="col-status">
+                                @if (student.Status == "Active")
+                                {
+                                    <span class="badge bg-success-subtle text-success px-2.5 py-1" style="font-size: 12px; border: 1px solid #bbf7d0; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
+                                        <span style="width: 6px; height: 6px; border-radius: 50%; background-color: #22c55e;"></span> Active
+                                    </span>
+                                }
+                                else if (student.Status == "Inactive")
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary px-2.5 py-1" style="font-size: 12px; border: 1px solid #cbd5e1; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
+                                        <span style="width: 6px; height: 6px; border-radius: 50%; background-color: #64748b;"></span> Inactive
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-subtle text-warning px-2.5 py-1" style="font-size: 12px; border: 1px solid #fef08a; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
+                                        <span style="width: 6px; height: 6px; border-radius: 50%; background-color: #eab308;"></span> Dropout
+                                    </span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-5 d-none">
+            <ion-icon name="search-outline" class="text-muted mb-2" style="font-size: 40px; opacity: 0.5;"></ion-icon>
+            <h5 class="text-muted fw-normal" style="font-size: 16px;">No matching students found</h5>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    // Update stats on load
+    function calculateStats() {
+    var rows = document.querySelectorAll("#studentsTable tbody tr");
+    var totalStudents = rows.length;
+    var activeStudents = 0;
+
+    rows.forEach(function (row) {
+    var statusText = row.querySelector(".col-status").innerText.trim().toLowerCase();
+    if (statusText.indexOf("active") > -1 && statusText.indexOf("inactive") === -1) {
+    activeStudents++;
+}
+});
+
+document.getElementById("statTotalStudents").innerText = totalStudents;
+document.getElementById("statActiveStudents").innerText = activeStudents;
+}
+
+// load batches for year
+function loadbatches(callback) {
+var year = $('#yearDropdown').val();
+
+if (year) {
+$.ajax({
+url: '/Student/GetBatchesByYear',
+type: 'GET',
+data: { year: year },
+success: function (data) {
+console.log("Batches received:", data); // debug
+var batchDropdown = $('#batchserial');
+batchDropdown.empty();
+batchDropdown.append('<option value="">-- Select Batch --</option>');
+$.each(data, function (i, batch) {
+batchDropdown.append('<option value="' + batch.Value + '">' + batch.Text + '</option>');
+});
+if (callback) callback();
+},
+error: function (xhr, status, error) {
+console.error("Error loading batches:", error);
+alert('Failed to load batches.');
+}
+});
+}
+else
+{
+    $('#batchserial').empty().append('<option value="">-- Select Batch --</option>');
+    $('#classserial').empty().append('<option value="">-- Select Class --</option>');
+}
+}
+
+// load classes for batch
+function loadClasses(callback) {
+var batchSerial = $('#batchserial').val();
+
+if (batchSerial) {
+$.ajax({
+url: '/Student/GetClassesByBatch',
+type: 'GET',
+data: { batchSerial: batchSerial },
+success: function (data) {
+var classDropdown = $('#classserial');
+classDropdown.empty().append('<option value="">-- Select Class --</option>');
+$.each(data, function (i, item) {
+classDropdown.append('<option value="' + item.Value + '">' + item.Text + '</option>');
+});
+if (callback) callback();
+}
+});
+}
+else
+{
+    $('#classserial').empty().append('<option value="">-- Select Class --</option>');
+}
+}
+
+$(document).ready(function () {
+calculateStats();
+
+// Set up search and filter listeners
+$("#tableSearch").on("keyup input", filterTable);
+$("#statusFilter").on("change", filterTable);
+
+// bind year change
+$('#yearDropdown').change(function () {
+console.log("Year changed to:", $(this).val());
+loadbatches();
+});
+
+// bind batch change
+$('#batchserial').change(function () {
+loadClasses();
+});
+
+// Clean up alert banners after 3 seconds
+setTimeout(function () {
+$('.alert').fadeOut('slow');
+}, 3000);
+
+// Check for TempData message and show toast
+@if (TempData["Message"] != null)
+{
+    <text>
+        var toastLive = document.getElementById('liveToast');
+        if (toastLive) {
+        var toast = new bootstrap.Toast(toastLive);
+        toast.show();
+    }
+</text>
+}
+});
+
+// Toggle Student Table List visibility
+function toggleStudentList() {
+var container = $("#studentsTableContainer");
+var btn = $("#toggleListBtn");
+if (container.hasClass("d-none")) {
+container.removeClass("d-none");
+btn.text("Hide List").css("background-color", "#475569");
+container[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+else
+{
+    container.addClass("d-none");
+    btn.text("Show List").css("background-color", "#0f172a");
+}
+}
+
+// Search & Filter functionality
+function filterTable() {
+var searchQuery = $("#tableSearch").val().toLowerCase();
+var statusFilter = $("#statusFilter").val();
+var visibleRows = 0;
+
+$("#studentsTable tbody tr").each(function () {
+var row = $(this);
+var regNo = row.find(".col-regno").text().trim().toLowerCase();
+var fullName = row.find(".col-fullname").text().trim().toLowerCase();
+var genderName = row.find(".col-gender").text().trim().toLowerCase();
+var cityName = row.find(".col-city").text().trim().toLowerCase();
+var admissionDateText = row.find(".col-admissiondate").text().trim().toLowerCase();
+var phoneText = row.find(".col-phone").text().trim().toLowerCase();
+var statusText = row.find(".col-status").text().trim().toLowerCase();
+
+var isActive = statusText.indexOf("active") > -1 && statusText.indexOf("inactive") === -1;
+var isInactive = statusText.indexOf("inactive") > -1;
+var isDropout = statusText.indexOf("dropout") > -1;
+
+var matchesSearch = regNo.indexOf(searchQuery) > -1 ||
+fullName.indexOf(searchQuery) > -1 ||
+genderName.indexOf(searchQuery) > -1 ||
+cityName.indexOf(searchQuery) > -1 ||
+admissionDateText.indexOf(searchQuery) > -1 ||
+phoneText.indexOf(searchQuery) > -1;
+
+var matchesStatus = true;
+
+if (statusFilter === "Active") {
+    matchesStatus = isActive;
+}
+else if (statusFilter === "Inactive") {
+    matchesStatus = isInactive;
+}
+else if (statusFilter === "Dropout") {
+    matchesStatus = isDropout;
+}
+
+if (matchesSearch && matchesStatus) {
+    row.removeClass("d-none");
+    visibleRows++;
+}
+else {
+    row.addClass("d-none");
+}
+});
+
+if (visibleRows === 0) {
+$("#emptyState").removeClass("d-none");
+$("#studentsTable").addClass("d-none");
+}
+else {
+$("#emptyState").addClass("d-none");
+$("#studentsTable").removeClass("d-none");
+}
+}
+
+// Fill form helper (Edit mode trigger)
+function fillStudentForm(row) {
+$("#studentsTable tbody tr").removeClass("editing-row table-active-row");
+$(row).addClass("editing-row table-active-row");
+
+var regNo = $(row).find(".col-regno").text().trim();
+var fullName = $(row).find(".col-fullname").text().trim();
+
+// Load details via ajax
+loadStudentDetails(regNo);
+
+// Update UI to edit state
+$("#addStudentForm").addClass("editing-state");
+document.getElementById("formHeaderEmoji").innerHTML = "&#x270F;";
+document.getElementById("formHeaderText").innerHTML = "Edit Student: " + fullName;
+$("#formBadge").fadeIn(200);
+
+// Adjust update button look
+$("#saveBtn").text("Update Student").css("background-color", "#8b5cf6").css("border-color", "#8b5cf6");
+
+// Disable Class, Year, Batch in edit mode
+$('#yearDropdown').attr('disabled', 'disabled');
+$('#batchserial').attr('disabled', 'disabled');
+$('#classserial').attr('disabled', 'disabled');
+
+// Scroll form into view gently
+document.getElementById("addStudentForm").scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Reset form dynamically without full page reload
+function resetStudentForm() {
+document.getElementById("studentserial").value = "";
+document.getElementById("addStudentForm").reset();
+$("#studentImage").hide().attr("src", "");
+$('#batchserial').empty().append('<option value="">-- Select Batch --</option>');
+$('#classserial').empty().append('<option value="">-- Select Class --</option>');
+
+// Restore UI defaults
+$("#studentsTable tbody tr").removeClass("editing-row table-active-row");
+$("#addStudentForm").removeClass("editing-state");
+document.getElementById("formHeaderEmoji").innerHTML = "&#x2795;";
+document.getElementById("formHeaderText").innerHTML = "Register New Student";
+$("#formBadge").fadeOut(200);
+
+// Reset button styling
+$("#saveBtn").text("Save").css("background-color", "#3b82f6").css("border-color", "#3b82f6");
+
+// Re-enable Class, Year, Batch
+$('#yearDropdown').removeAttr('disabled');
+$('#batchserial').removeAttr('disabled');
+$('#classserial').removeAttr('disabled');
+}
+
+// validation for date and telephone numbers
+function validateDates() {
+var today = new Date().toISOString().split("T")[0];
+
+var dob = document.getElementById("dateofbirth").value;
+var admission = document.getElementById("admissiondate").value;
+var residencePhone = document.getElementById("residencephone").value;
+var guardianPhone = document.getElementById("guardianphone").value;
+
+if (dob > today) {
+alert("Date of Birth cannot be in the future.");
+return false;
+}
+
+if (admission > today) {
+alert("Admission Date cannot be in the future.");
+return false;
+}
+
+// Validate it is exactly 10 digits and all are numbers
+if (!/^\d{10}$/.test(residencePhone)) {
+alert("Residence phone number must be exactly 10 digits.");
+return false;
+}
+
+if (!/^\d{10}$/.test(guardianPhone)) {
+alert("Guardian phone number must be exactly 10 digits.");
+return false;
+}
+
+// Re-enable disabled dropdowns so their values are sent to the server on submit
+$('#yearDropdown, #batchserial, #classserial').removeAttr('disabled');
+
+return true;
+}
+
+function formatDate(dotNetDateString) {
+if (!dotNetDateString) return "";
+const timestamp = parseInt(dotNetDateString.replace(/\/Date\((\d+)\)\//, "$1"));
+const date = new Date(timestamp);
+return date.toISOString().split('T')[0]; // yyyy-MM-dd
+}
+
+// Retrieve student details for reg no
+function loadStudentDetails(regNo) {
+if (!regNo) return;
+
+fetch(`/Student/LookupStudent?regNo=${regNo}`)
+.then(res => res.json())
+.then(data => {
+console.log("Student data:", data);
+
+// Fill basic fields
+$("#studentserial").val(data.StudentSerial);
+$("#regno").val(data.RegNo);
+$("#firstname").val(data.FirstName);
+$("#fullname").val(data.FullName);
+$("#gender").val(data.Gender);
+$("#initials").val(data.Initials);
+$("#lastname").val(data.LastName);
+$("#dateofbirth").val(formatDate(data.DateofBirth));
+$("#admissiondate").val(formatDate(data.AdmissionDate));
+$("#address1").val(data.Address1);
+$("#address2").val(data.Address2);
+$("#address3").val(data.Address3);
+$("#city").val(data.City);
+$("#residencephone").val(data.ResidencePhone);
+$("#guardianname").val(data.GuardianName);
+$("#guardianphone").val(data.GuardianPhone);
+$("#guardiantype").val(data.GuardianType);
+$("#status").val(data.Status);
+$("#yearDropdown").val(data.Year);
+
+// Set image
+if (data.LookupPhoto) {
+$("#studentImage").attr("src", data.LookupPhoto).show();
+}
+else
+{
+    $("#studentImage").attr("src", "/Content/img/profileimg.png").show();
+}
+
+// Load batches for year
+$.get('/Student/GetBatchesByYear', { year: data.Year }, function (batches) {
+var $batchDropdown = $('#batchserial');
+$batchDropdown.empty().append('<option value="">-- Select Batch --</option>');
+$.each(batches, function (i, batch) {
+$batchDropdown.append(`<option value="${batch.Value}">${batch.Text}</option>`);
+});
+
+// Set batch value
+$batchDropdown.val(data.BatchSerial);
+
+// Load classes for batch
+$.get('/Student/GetClassesByBatch', { batchSerial: data.BatchSerial }, function (classes) {
+var $classDropdown = $('#classserial');
+$classDropdown.empty().append('<option value="">-- Select Class --</option>');
+$.each(classes, function (i, cls) {
+$classDropdown.append(`<option value="${cls.Value}">${cls.Text}</option>`);
+});
+
+// Set class value
+$classDropdown.val(data.ClassSerial);
+});
+});
+});
+}
+</script>
+}

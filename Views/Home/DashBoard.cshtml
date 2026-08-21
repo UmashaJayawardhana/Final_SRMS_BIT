@@ -1,0 +1,157 @@
+@{
+    ViewBag.Title = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    
+    var userName = Session["FullName"] != null ? Session["FullName"].ToString() : "Guest";
+}
+
+<!-- Dashboard Styles -->
+<link rel="stylesheet" href="@Url.Content("~/Content/StyleSheet2.css")" />
+
+<!-- Dashboard Hero Banner -->
+<div class="dashboard-hero">
+    <h2>Welcome back, @userName!</h2>
+    <p>Always stay updated with the latest announcements, schedules, and result releases of Matara Central College.</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <ion-icon name="people"></ion-icon>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">@ViewBag.TotalStudents</span>
+            <span class="stat-label">Total Students</span>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <ion-icon name="school"></ion-icon>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">@ViewBag.TotalTeachers</span>
+            <span class="stat-label">Assigned Teachers</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <ion-icon name="document-text"></ion-icon>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">@ViewBag.TotalExams</span>
+            <span class="stat-label">Active Exams</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <ion-icon name="grid"></ion-icon>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">@ViewBag.TotalClasses</span>
+            <span class="stat-label">Total Classes</span>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="dashboard-layout">
+    <!-- Left Column: Announcements -->
+    <div>
+        <div class="announcement-container">
+            <h2><ion-icon name="megaphone-outline" style="color: #f59e0b;"></ion-icon> Important Notifications</h2>
+            
+            @{
+                var notifications = ViewBag.DashboardNotifications as IEnumerable<MvcApplication1.Models.DashboardNotificationModel>;
+            }
+
+            @if (notifications != null && notifications.Any())
+            {
+                foreach (var note in notifications)
+                {
+                    <div class="announcement-marquee-wrapper mb-3">
+                        <marquee behavior="scroll" direction="left" class="announcement-text" title="@note.Subject">
+                            @note.MessageText
+                        </marquee>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="announcement-marquee-wrapper mb-3">
+                    <marquee behavior="scroll" direction="left" class="announcement-text">
+                        Welcome to Matara Central College Student Result Management System!
+                    </marquee>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Right Column: Quick Time Table Downloads -->
+    <div>
+        <div class="announcement-container">
+            <h6><ion-icon name="download-outline" style="color: #3b82f6;"></ion-icon> Download Time Table</h6>
+            
+            @{
+                var timetables = ViewBag.DashboardTimeTables as IEnumerable<MvcApplication1.Models.ExamScheduleModels>;
+            }
+
+            <div class="download-list">
+                @if (timetables != null && timetables.Any())
+                {
+                    foreach (var item in timetables)
+                    {
+                        var title = string.Format("{0} {1} - {2}", item.BatchName, item.ClassName, item.ExamName);
+                        string url = "";
+                        
+                        if (item.ClassSerial > 0)
+                        {
+                            url = Url.Action("ViewExamTimeTable", "Exam", new { year = item.Year, batchserial = item.BatchSerial, classserial = item.ClassSerial, termserial = item.TermSerial, examserial = item.ExamSerial });
+                        }
+                        else
+                        {
+                            url = Url.Action("ViewFinalExamTimeTable", "Exam", new { year = item.Year, batchserial = item.BatchSerial, termserial = item.TermSerial, examserial = item.ExamSerial });
+                        }
+
+                        <a href="@url" class="download-item">
+                            <div class="download-title-area">
+                                <ion-icon name="document-outline" class="download-icon-bullet"></ion-icon>
+                                <span>@title</span>
+                            </div>
+                            <ion-icon name="arrow-down-circle-outline" class="download-action-icon"></ion-icon>
+                        </a>
+                    }
+                }
+                else
+                {
+                    <p style="padding: 10px; color: #475569;">No recent timetables available.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <script>
+        window.onload = function () {
+            var toastLive = document.getElementById('liveToast');
+            if (toastLive) {
+                var toast = new bootstrap.Toast(toastLive);
+                toast.show();
+            }
+        };
+    </script>
+}
+
+<script>
+    setTimeout(function () {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.display = 'none';
+        });
+    }, 3000);
+</script>

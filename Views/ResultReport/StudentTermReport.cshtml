@@ -1,0 +1,377 @@
+@{
+    ViewBag.Title = "StudentTermReport";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+
+<!-- StudentTermReport.cshtml content -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSS -->
+    <link rel="stylesheet" href="@Url.Content("~/Content/StyleSheet4.css")" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css">
+
+
+    <title>StudentTermReport</title>
+
+</head>
+<body>
+    
+    <style>
+    .inline-form-row {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        align-items: flex-end !important;
+        gap: 12px !important;
+        margin-bottom: 1.5rem;
+        width: 100%;
+    }
+    .inline-form-row > div {
+        flex: 1 1 150px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        margin-bottom: 0 !important;
+    }
+    .inline-form-row .button-group-inline {
+        flex: 0 0 auto !important;
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 10px !important;
+        align-items: center !important;
+    }
+    .btn-search {
+        background-color: #22c55e !important;
+        color: white !important;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.2) !important;
+    }
+    .btn-search:hover {
+        background-color: #16a34a !important;
+        box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3) !important;
+    }
+    .btn-cancel {
+        background-color: #ef4444 !important;
+        color: white !important;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2) !important;
+    }
+    .btn-cancel:hover {
+        background-color: #dc2626 !important;
+        box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3) !important;
+    }
+    .btn-download {
+        background-color: #3b82f6 !important;
+        color: white !important;
+        border: none !important;
+        padding: 10px 40px !important;
+        border-radius: 4px !important;
+        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2) !important;
+        width: 200px !important;
+        min-width: 150px !important;
+        display: block !important;
+        font-weight: 500;
+        margin: 0 auto !important;
+        transition: all 0.2s ease-in-out;
+    }
+    .btn-download:hover {
+        background-color: #2563eb !important;
+        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3) !important;
+        transform: translateY(-1px);
+    }
+    </style>
+      
+    @model List<MvcApplication1.Models.ResultReportModels>
+    @{
+        
+        var terms = ViewBag.Terms as List<MvcApplication1.Models.TermModels>;
+    }
+    
+    <!-- Form -->
+    <div class="container mt-4">
+        <div class="card shadow-sm">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #2c3e50, #3498db);">
+                <h4 class="mb-0"><i class="fas fa-list-alt"></i> Student Term Report</h4>
+            </div>
+            <div class="card-body">
+                @using (Html.BeginForm("StudentTermReport", "ResultReport", FormMethod.Post, new { enctype = "multipart/form-data", @class = "addform", id = "StudentTermReportForm" }))
+                {
+                    <input type="hidden" id="examresultserial" name="ExamResultSerial" />
+                    
+                    <div class="inline-form-row">
+                        <div>
+                            <label for="yearlabel">Year:</label>
+                            @Html.DropDownList("Year",(SelectList)ViewBag.Years, "--Select Year--", new { @class = "form-control", @id = "year",  required = "required" })
+                        </div>
+                        <div>
+                            <label for="batchDropdown">Batch:</label>
+                            <select id="batchserial" class="form-control" name="BatchSerial" required>
+                                <option value="">-- Select Batch --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="classDropdown">Class:</label>
+                            <select id="classserial" class="form-control" name="ClassSerial" required>
+                                <option value="">-- Select Class --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Student:</label>
+                            <select id="studentserial" class="form-control" name="StudentSerial" required>
+                                <option value="">-- Select Student --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="termDropdown">Term:</label>
+                            <select id="termserial" class="form-control" name="TermSerial" required>
+                                <option value="">-- Select Term --</option>
+                                @foreach (var term in terms)
+                                {
+                                    <option value="@term.TermSerial">@term.TermName</option>
+                                }
+                            </select>
+                        </div>
+                        
+                        <div class="button-group-inline">
+                            <button type="button" class="btn-search" onclick="searchStudents()">Search</button>
+                            <button type="button" class="btn-cancel" onclick="location.reload();">Cancel</button>
+                        </div>
+                    </div>
+
+                    <div id="studentsGrid"></div>
+
+                    <div class="form-group text-center mt-4">
+                        <button type="submit" class="btn-download">Download</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+     
+
+
+     @if (TempData["Message"] != null)
+     {
+    <script>
+        window.onload = function () {
+            var toastLive = document.getElementById('liveToast');
+            var toast = new bootstrap.Toast(toastLive);
+            toast.show();
+        };
+    </script>
+     }
+  @section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+
+            // log and bind year change
+            $('#year').change(function () {
+                console.log("Year changed to:", $(this).val());
+                loadbatches();
+                loadStudents();
+            });
+
+            $('#batchserial').change(function () {
+                loadClasses();
+                loadStudents();
+            });
+
+
+            $('#termserial').change(function () {
+                loadExam();
+            });
+
+            
+            
+
+           
+
+
+            //load batches
+            function loadbatches() {
+                var year = $('#year').val();
+
+                if (year) {
+                    $.ajax({
+                        url: '/ResultReport/GetBatchesByYearBothStatusFilterUserGroup',
+                        type: 'GET',
+                        data: { year: year },
+                        success: function (data) {
+                            console.log("Batches received:", data); // debug
+                            var batchDropdown = $('#batchserial');
+                            batchDropdown.empty();
+                            batchDropdown.append('<option value="">-- Select Batch --</option>');
+                            $.each(data, function (i, batch) {
+                                batchDropdown.append('<option value="' + batch.Value + '">' + batch.Text + '</option>');
+                            });
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error loading batches:", error);
+                            alert('Failed to load batches.');
+                        }
+                    });
+                }
+            }
+
+
+            //load classes
+            function loadClasses() {
+                var batchSerial = $('#batchserial').val();
+
+                if (batchSerial) {
+                    $.ajax({
+                        url: '/ResultReport/GetClassesByBatchBothStatusFilterUserGroup',
+                        type: 'GET',
+                        data: { batchSerial: batchSerial },
+                        success: function (data) {
+                            var classDropdown = $('#classserial');
+                            classDropdown.empty().append('<option value="">-- Select Class --</option>');
+                            $.each(data, function (i, item) {
+                                classDropdown.append('<option value="' + item.Value + '">' + item.Text + '</option>');
+                            });
+
+                            classDropdown.on('change', function () {
+                                loadStudents(); // rebind
+                            });
+                        }
+                    });
+                }
+            }
+
+           
+
+
+            function loadStudents() {
+                var year = $('#year').val();
+                var batchserial = $('#batchserial').val();
+                var classserial = $('#classserial').val();
+
+                if (year && batchserial && classserial) {
+                    console.log("Loading students with:", year, batchserial, classserial);
+                    $.ajax({
+                        url: '/ResultReport/GetStudentsByYearBatchClassFilterUserGroup',
+                        type: 'GET',
+                        data: {
+                            year: year,
+                            batchserial: batchserial,
+                            classserial: classserial
+                        },
+                        success: function (data) {
+                            var studentDropdown = $('#studentserial');
+                            studentDropdown.empty().append('<option value="">-- Select Student --</option>');
+                            $.each(data, function (i, student) {
+                                studentDropdown.append('<option value="' + student.Value + '">' + student.Text + '</option>');
+                            });
+                        },
+                        error: function () {
+                            alert('Failed to load students.');
+                        }
+                    });
+                }
+            }
+
+          
+        });
+    </script>
+}
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+
+    <script>
+        function searchStudents() {
+            var year = $('#year').val();
+            var batchserial = $('#batchserial').val();
+            var classserial = $('#classserial').val();
+            var termserial = $('#termserial').val();
+            var studentserial = $('#studentserial').val();
+
+            if (!year || !batchserial || !classserial || !termserial || !studentserial) {
+                alert("Please select all fields.");
+                return;
+            }
+
+            $.ajax({
+                url: '/ResultReport/SearchStudentTermReportForGrid',
+                type: 'GET',
+                data: {
+                    year: year,
+                    batchserial: batchserial,
+                    classserial: classserial,
+                    termserial: termserial,
+                    studentserial: studentserial
+                },
+                success: function (data) {
+                    var html = '';
+                    if (data.length > 0) {
+                        var regNo = data[0].RegNo != null ? data[0].RegNo : '';
+                        var fullName = data[0].FullName != null ? data[0].FullName : '';
+
+                        html += '<div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light border rounded">';
+                        html += '<h5 class="mb-0 text-dark"><strong>Reg No:</strong> <span class="text-primary">' + regNo + '</span></h5>';
+                        html += '<h5 class="mb-0 text-dark"><strong>Student Name:</strong> <span class="text-success">' + fullName + '</span></h5>';
+                        html += '</div>';
+
+                        html += '<div class="table-responsive"><table id="resultTable" class="table table-striped table-hover table-bordered w-100">';
+                        html += '<thead class="table-dark"><tr><th>Subject Name</th><th>Assignment 1</th><th>Assignment 2</th><th>Final Exam</th></tr></thead><tbody>';
+
+                        for (var i = 0; i < data.length; i++) {
+                            html += '<tr>';
+                            html += '<td>' + (data[i].SubjectName || '') + '</td>';
+                            html += '<td>' + (data[i].Assignment1 || '') + '</td>';
+                            html += '<td>' + (data[i].Assignment2 || '') + '</td>';
+                            html += '<td>' + (data[i].FinalExam || '') + '</td>';
+                            html += '</tr>';
+                        }
+
+                        html += '</tbody></table></div>';
+                    } else {
+                        html = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> No data found.</div>';
+                    }
+
+                    $('#studentsGrid').html(html);
+
+                    if (data.length > 0) {
+                        $('#resultTable').DataTable({
+                            "pageLength": 10,
+                            "responsive": true,
+                            "destroy": true,
+                            "language": {
+                                "search": "_INPUT_",
+                                "searchPlaceholder": "Search records..."
+                            }
+                        });
+                    }
+                },
+                error: function () {
+                    alert("Error occurred.");
+                }
+            });
+        }
+    </script>
+     <script>
+         setTimeout(function () {
+             const alert = document.querySelector('.alert');
+             if (alert) {
+                 alert.style.display = 'none';
+             }
+         }, 3000); // Hide after 3 seconds
+</script>
+    
+    </body>
+
+    </html>

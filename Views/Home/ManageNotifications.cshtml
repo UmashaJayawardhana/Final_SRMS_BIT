@@ -1,0 +1,134 @@
+@model IEnumerable<MvcApplication1.Models.DashboardNotificationModel>
+
+@{
+    ViewBag.Title = "Manage Notifications";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Add New Notification</h5>
+                </div>
+                <div class="card-body">
+                    @using (Html.BeginForm("ManageNotifications", "Home", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="mb-3">
+                            <label for="Subject" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="Subject" name="Subject" required maxlength="255">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="MessageText" class="form-label">Message Text</label>
+                            <textarea class="form-control" id="MessageText" name="MessageText" rows="3" required maxlength="1000"></textarea>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="IsActive" name="IsActive" value="true" checked>
+                            <input type="hidden" name="IsActive" value="false" />
+                            <label class="form-check-label" for="IsActive">Set Active (Visible on Dashboard)</label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">Save Notification</button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Existing Notifications</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Message</th>
+                                    <th>Date Created</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model != null && Model.Any())
+                                {
+                                    foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td>@item.Subject</td>
+                                            <td>@item.MessageText</td>
+                                            <td>@item.CreatedDate.ToString("yyyy-MM-dd")</td>
+                                            <td>
+                                                @if (item.IsActive)
+                                                {
+                                                    <span class="badge bg-success">Active</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm @(item.IsActive ? "btn-warning" : "btn-success") toggle-status-btn" data-id="@item.NotificationId">
+                                                    @(item.IsActive ? "Deactivate" : "Activate")
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">No notifications found.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            alert('@TempData["Message"]');
+        });
+    </script>
+}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('.toggle-status-btn').click(function () {
+            var btn = $(this);
+            var id = btn.data('id');
+            
+            $.ajax({
+                url: '@Url.Action("ToggleNotificationStatus", "Home")',
+                type: 'POST',
+                data: { id: id },
+                success: function (response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert('An error occurred while communicating with the server.');
+                }
+            });
+        });
+    });
+</script>

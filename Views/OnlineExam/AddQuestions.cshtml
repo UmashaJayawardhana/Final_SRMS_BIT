@@ -1,0 +1,365 @@
+@{
+    ViewBag.Title = "Add Assignment Questions";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var terms = ViewBag.Terms as List<MvcApplication1.Models.TermModels> ?? new List<MvcApplication1.Models.TermModels>();
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="@Url.Content("~/Content/StyleSheet4.css")" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css">
+    <title>Add Assignment Questions</title>
+    <style>
+        .inline-form-row {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            align-items: flex-end !important;
+            gap: 12px !important;
+            margin-bottom: 1.5rem;
+            width: 100%;
+        }
+        .inline-form-row > div {
+            flex: 1 1 150px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            margin-bottom: 0 !important;
+        }
+        .inline-form-row label {
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 2px;
+            font-size: 14px;
+        }
+        .inline-form-row .form-control {
+            height: 40px !important;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        .inline-form-row .button-group-inline {
+            flex: 0 0 auto !important;
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 10px !important;
+            align-items: center !important;
+        }
+        .btn-search {
+            background-color: #22c55e !important;
+            color: white !important;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.2) !important;
+            height: 40px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .btn-search:hover {
+            background-color: #16a34a !important;
+            box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3) !important;
+            transform: translateY(-1px);
+        }
+        .question-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="card shadow-sm">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #2c3e50, #3498db);">
+                <h4 class="mb-0"><i class="fas fa-edit"></i> Add Assignment Questions</h4>
+            </div>
+            <div class="card-body">
+                <div class="inline-form-row">
+                    <div>
+                        <label>Year:</label>
+                        @Html.DropDownList("Year", (SelectList)ViewBag.Years, "--Select Year--", new { @class = "form-control", @id = "year" })
+                    </div>
+                    <div>
+                        <label>Batch:</label>
+                        <select id="batchserial" class="form-control"><option value="">-- Select Batch --</option></select>
+                    </div>
+                    <div>
+                        <label>Class:</label>
+                        <select id="classserial" class="form-control"><option value="">-- Select Class --</option></select>
+                    </div>
+                    <div>
+                        <label>Term:</label>
+                        <select id="termserial" class="form-control">
+                            <option value="">-- Select Term --</option>
+                            @foreach (var term in terms)
+                            {
+                                <option value="@term.TermSerial">@term.TermName</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label>Exam:</label>
+                        <select id="examserial" class="form-control"><option value="">-- Select Exam --</option></select>
+                    </div>
+                    <div>
+                        <label>Subject:</label>
+                        <select id="subjectserial" class="form-control"><option value="">-- Select Subject --</option></select>
+                    </div>
+                </div>
+                
+                <div class="row mt-2">
+                    <div class="col-12 text-center">
+                        <button type="button" class="btn-search" style="width: 250px; font-size: 16px;" onclick="loadPendingExams()">Load Pending Assignments</button>
+                    </div>
+                </div>
+                
+                <hr />
+                
+                <div id="assignmentSection" style="display:none;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label><strong>Select Pending Online Assignment:</strong></label>
+                            <select id="assignmentDropdown" class="form-control mb-3">
+                                <option value="">-- Select Assignment --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label><strong>Number of MCQs:</strong></label>
+                            <input type="number" id="numQuestions" class="form-control" min="1" max="100" value="5" />
+                        </div>
+                        <div class="col-md-2 mt-4">
+                            <button type="button" class="btn btn-primary" onclick="generateQuestionFields()">Generate Fields</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="questionsContainer" class="mt-4"></div>
+                
+                <div id="saveSection" class="text-center mt-4" style="display:none;">
+                    <button type="button" class="btn btn-success px-5" onclick="saveQuestions()">Save Questions</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#year').change(loadBatches);
+            $('#batchserial').change(function() { loadClasses(); loadSubjects(); });
+            $('#termserial').change(loadExam);
+            
+            $('#assignmentDropdown').change(function() {
+                var assignmentId = $(this).val();
+                if (assignmentId) {
+                    $.get('/OnlineExam/GetQuestions', { examScheduleAssignmentSerial: assignmentId }, function(data) {
+                        if (data && data.length > 0) {
+                            $('#numQuestions').val(data.length);
+                            
+                            var html = '';
+                            for(var i=0; i<data.length; i++) {
+                                var q = data[i];
+                                var num = i + 1;
+                                html += '<div class="question-card">';
+                                html += '<h5>Question ' + num + '</h5>';
+                                html += '<div class="mb-2"><textarea class="form-control q-text" rows="2" placeholder="Type question here...">' + (q.QuestionText || '') + '</textarea></div>';
+                                html += '<div class="row">';
+                                html += '<div class="col-md-6 mb-2"><input type="text" class="form-control q-opt1" placeholder="Option 1" value="' + (q.Option1 || '') + '" /></div>';
+                                html += '<div class="col-md-6 mb-2"><input type="text" class="form-control q-opt2" placeholder="Option 2" value="' + (q.Option2 || '') + '" /></div>';
+                                html += '<div class="col-md-6 mb-2"><input type="text" class="form-control q-opt3" placeholder="Option 3" value="' + (q.Option3 || '') + '" /></div>';
+                                html += '<div class="col-md-6 mb-2"><input type="text" class="form-control q-opt4" placeholder="Option 4" value="' + (q.Option4 || '') + '" /></div>';
+                                html += '</div>';
+                                html += '<div class="row mt-2"><div class="col-md-4"><select class="form-control q-correct"><option value="1" ' + (q.CorrectOption === 1 ? 'selected' : '') + '>Option 1 is correct</option><option value="2" ' + (q.CorrectOption === 2 ? 'selected' : '') + '>Option 2 is correct</option><option value="3" ' + (q.CorrectOption === 3 ? 'selected' : '') + '>Option 3 is correct</option><option value="4" ' + (q.CorrectOption === 4 ? 'selected' : '') + '>Option 4 is correct</option></select></div></div>';
+                                html += '</div>';
+                            }
+                            $('#questionsContainer').html(html);
+                            $('#saveSection').slideDown();
+                        } else {
+                            $('#questionsContainer').empty();
+                            $('#saveSection').hide();
+                        }
+                    });
+                } else {
+                    $('#questionsContainer').empty();
+                    $('#saveSection').hide();
+                }
+            });
+            
+            function loadBatches() {
+                var year = $('#year').val();
+                if (year) {
+                    $.get('/Exam/GetBatchesByYear', { year: year }, function (data) {
+                        var ddl = $('#batchserial');
+                        ddl.empty().append('<option value="">-- Select Batch --</option>');
+                        $.each(data, function (i, item) { ddl.append('<option value="' + item.Value + '">' + item.Text + '</option>'); });
+                    });
+                }
+            }
+
+            function loadClasses() {
+                var batchSerial = $('#batchserial').val();
+                if (batchSerial) {
+                    $.get('/Exam/GetClassesByBatchByTeacherSerial', { batchSerial: batchSerial }, function (data) {
+                        var ddl = $('#classserial');
+                        ddl.empty().append('<option value="">-- Select Class --</option>');
+                        $.each(data, function (i, item) { ddl.append('<option value="' + item.Value + '">' + item.Text + '</option>'); });
+                    });
+                }
+            }
+
+            function loadSubjects() {
+                var batchSerial = $('#batchserial').val();
+                if (batchSerial) {
+                    $.get('/Exam/GetSubjectsByBatch', { batchSerial: batchSerial }, function (data) {
+                        var ddl = $('#subjectserial');
+                        ddl.empty().append('<option value="">-- Select Subject --</option>');
+                        $.each(data, function (i, item) { ddl.append('<option value="' + item.Value + '">' + item.Text + '</option>'); });
+                    });
+                }
+            }
+
+            function loadExam() {
+                var termserial = $('#termserial').val();
+                if (termserial) {
+                    $.get('/Exam/GetExamsAllActive', { termserial: termserial }, function (data) {
+                        var ddl = $('#examserial');
+                        ddl.empty().append('<option value="">-- Select Exam --</option>');
+                        $.each(data, function (i, item) { ddl.append('<option value="' + item.Value + '">' + item.Text + '</option>'); });
+                    });
+                }
+            }
+        });
+
+        function loadPendingExams() {
+            var year = $('#year').val();
+            var batchserial = $('#batchserial').val();
+            var classserial = $('#classserial').val();
+            var termserial = $('#termserial').val();
+            var subjectserial = $('#subjectserial').val();
+            var examserial = $('#examserial').val();
+
+            if (!year || !batchserial || !classserial || !termserial || !subjectserial || !examserial) {
+                alert("Please select all fields.");
+                return;
+            }
+
+            $.ajax({
+                url: '/OnlineExam/GetPendingOnlineExams',
+                type: 'GET',
+                data: { year, batchSerial: batchserial, classSerial: classserial, termSerial: termserial, subjectSerial: subjectserial, examSerial: examserial },
+                success: function (data) {
+                    var ddl = $('#assignmentDropdown');
+                    ddl.empty().append('<option value="">-- Select Assignment --</option>');
+                    if(data.length > 0) {
+                        $.each(data, function (i, item) { ddl.append('<option value="' + item.Value + '">' + item.Text + '</option>'); });
+                        $('#assignmentSection').slideDown();
+                    } else {
+                        $('#assignmentSection').hide();
+                        Swal.fire('No Data', 'No pending online assignments found for the selected criteria.', 'info');
+                    }
+                }
+            });
+        }
+
+        function generateQuestionFields() {
+            var assignmentId = $('#assignmentDropdown').val();
+            if(!assignmentId) {
+                alert("Please select an assignment first.");
+                return;
+            }
+
+            var currentCount = $('.question-card').length;
+            var requestedCount = parseInt($('#numQuestions').val()) || 0;
+            
+            if (requestedCount < currentCount) {
+                var diff = currentCount - requestedCount;
+                for(var i=0; i<diff; i++) {
+                    $('.question-card').last().remove();
+                }
+            } else if (requestedCount > currentCount) {
+                var diff = requestedCount - currentCount;
+                var html = '';
+                for(var i=1; i<=diff; i++) {
+                    var num = currentCount + i;
+                    html += '<div class="question-card">';
+                    html += '<h5>Question ' + num + '</h5>';
+                    html += '<div class="mb-2"><textarea class="form-control q-text" rows="2" placeholder="Type question here..."></textarea></div>';
+                    html += '<div class="row">';
+                    html += '<div class="col-md-6 mb-2"><input type="text" class="form-control q-opt1" placeholder="Option 1" /></div>';
+                    html += '<div class="col-md-6 mb-2"><input type="text" class="form-control q-opt2" placeholder="Option 2" /></div>';
+                    html += '<div class="col-md-6 mb-2"><input type="text" class="form-control q-opt3" placeholder="Option 3" /></div>';
+                    html += '<div class="col-md-6 mb-2"><input type="text" class="form-control q-opt4" placeholder="Option 4" /></div>';
+                    html += '</div>';
+                    html += '<div class="row mt-2"><div class="col-md-4"><select class="form-control q-correct"><option value="1">Option 1 is correct</option><option value="2">Option 2 is correct</option><option value="3">Option 3 is correct</option><option value="4">Option 4 is correct</option></select></div></div>';
+                    html += '</div>';
+                }
+                $('#questionsContainer').append(html);
+            }
+
+            if (requestedCount > 0) {
+                $('#saveSection').slideDown();
+            } else {
+                $('#saveSection').hide();
+            }
+        }
+
+        function saveQuestions() {
+            var assignmentId = $('#assignmentDropdown').val();
+            var questions = [];
+            var isValid = true;
+
+            $('.question-card').each(function() {
+                var qText = $(this).find('.q-text').val().trim();
+                var opt1 = $(this).find('.q-opt1').val().trim();
+                var opt2 = $(this).find('.q-opt2').val().trim();
+                var opt3 = $(this).find('.q-opt3').val().trim();
+                var opt4 = $(this).find('.q-opt4').val().trim();
+                var correct = $(this).find('.q-correct').val();
+
+                if(qText === '' || opt1 === '' || opt2 === '') {
+                    isValid = false;
+                }
+
+                questions.push({
+                    ExamScheduleAssignmentSerial: assignmentId,
+                    QuestionText: qText,
+                    Option1: opt1,
+                    Option2: opt2,
+                    Option3: opt3,
+                    Option4: opt4,
+                    CorrectOption: correct
+                });
+            });
+
+            if(!isValid) {
+                Swal.fire('Error', 'Please fill in all questions and at least Option 1 and Option 2 for each.', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: '/OnlineExam/SaveQuestions',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(questions),
+                success: function(res) {
+                    if(res.success) {
+                        Swal.fire('Success', res.message, 'success').then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

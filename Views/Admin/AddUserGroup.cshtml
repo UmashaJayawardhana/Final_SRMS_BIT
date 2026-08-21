@@ -1,0 +1,302 @@
+@model List<MvcApplication1.Models.UserGroupModels>
+@{
+    ViewBag.Title = "Add User Group";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .admin-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .admin-card:hover {
+        box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.06);
+    }
+
+    .card-header-admin {
+        padding: 1.25rem 1.5rem;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .card-header-admin h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.15rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-body-admin {
+        padding: 1.75rem;
+    }
+
+    .custom-input-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .custom-input-group ion-icon.input-icon {
+        position: absolute;
+        left: 14px;
+        font-size: 1.25rem;
+        color: #64748b;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .custom-input-group .form-control,
+    .custom-input-group .form-select {
+        padding-left: 44px;
+        height: 48px;
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        font-weight: 500;
+        color: #1e293b;
+        background-color: #f8fafc;
+        transition: all 0.2s ease;
+    }
+
+    .custom-input-group .form-control:focus,
+    .custom-input-group .form-select:focus {
+        background-color: #ffffff;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    }
+
+    /* Modern Table Styling */
+    .table-modern {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table-modern thead th {
+        background-color: #f8fafc;
+        color: #475569;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 12px 16px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .table-modern tbody tr {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .table-modern tbody tr:hover {
+        background-color: #f0f7ff !important;
+    }
+
+    .table-modern tbody tr.selected-row {
+        background-color: #e0f2fe !important;
+        border-left: 4px solid #0284c7;
+    }
+
+    .table-modern tbody td {
+        padding: 14px 16px;
+        vertical-align: middle;
+        color: #334155;
+        font-weight: 500;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.92rem;
+    }
+
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.78rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .mode-badge {
+        background: rgba(255, 255, 255, 0.15);
+        color: #60a5fa;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .search-box-container {
+        max-width: 320px;
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <!-- Form Card -->
+    <div class="admin-card">
+        <div class="card-header-admin">
+            <h5>
+                <ion-icon name="people-circle-outline" style="font-size: 1.5rem; color: #60a5fa;"></ion-icon>
+                <span>Add User Group</span>
+            </h5>
+            <span class="mode-badge" id="formModeBadge">
+                <ion-icon name="add-circle-outline"></ion-icon> Create Mode
+            </span>
+        </div>
+        <div class="card-body-admin">
+            @using (Html.BeginForm("AddUserGroup", "Admin", FormMethod.Post, new { enctype = "multipart/form-data", id = "createUserGroupForm" }))
+            {
+                <input type="hidden" id="usergroupserial" name="UserGroupSerial" />
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-dark fw-semibold small mb-1">User Group Name <span class="text-danger">*</span></label>
+                        <div class="custom-input-group">
+                            <ion-icon name="shield-outline" class="input-icon"></ion-icon>
+                            <input type="text" id="usergroupname" name="UserGroupName" class="form-control" placeholder="e.g. Administrator, Teacher, Student" required autocomplete="off" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label text-dark fw-semibold small mb-1">Status <span class="text-danger">*</span></label>
+                        <div class="custom-input-group">
+                            <ion-icon name="options-outline" class="input-icon"></ion-icon>
+                            <select id="status" name="Status" class="form-select" required>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-2" id="btnSaveUserGroup">
+                        <ion-icon name="save-outline"></ion-icon> Save User Group
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-2" onclick="resetForm()">
+                        <ion-icon name="refresh-outline"></ion-icon> Clear / Reset
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Data Table Card -->
+    <div class="admin-card">
+        <div class="card-header-admin">
+            <h5>
+                <ion-icon name="list-outline" style="font-size: 1.4rem; color: #a78bfa;"></ion-icon>
+                <span>User Groups Directory</span>
+                <span class="badge bg-primary rounded-pill ms-2" style="font-size: 0.8rem;">@Model.Count Groups</span>
+            </h5>
+            <div class="search-box-container">
+                <div class="custom-input-group">
+                    <ion-icon name="search-outline" class="input-icon" style="color: #ffffff; opacity: 0.7;"></ion-icon>
+                    <input type="text" id="tableSearchInput" class="form-control text-white" placeholder="Search user groups..." style="background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); height: 40px; font-size: 0.88rem;" />
+                </div>
+            </div>
+        </div>
+        <div class="p-0">
+            <div class="table-responsive">
+                <table class="table table-modern" id="userGroupTable">
+                    <thead>
+                        <tr>
+                            <th style="display: none;">Serial No</th>
+                            <th style="width: 80px;">No</th>
+                            <th>User Group Name</th>
+                            <th style="width: 140px;">Status</th>
+                            <th style="width: 100px;" class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            var isActive = (user.Status ?? "").ToLower() == "active";
+                            <tr onclick="fillForm(this)">
+                                <td style="display: none;">@user.UserGroupSerial</td>
+                                <td class="fw-bold text-secondary">@user.No</td>
+                                <td class="fw-semibold text-dark">@user.UserGroupName</td>
+                                <td>
+                                    <span class="status-badge @(isActive ? "bg-success text-white" : "bg-warning text-dark")">
+                                        <ion-icon name="@(isActive ? "checkmark-circle" : "alert-circle")"></ion-icon>
+                                        @user.Status
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-light border rounded-2" title="Click to edit">
+                                        <ion-icon name="create-outline" style="font-size: 1rem; color: #3b82f6;"></ion-icon>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function fillForm(row) {
+            // Remove selection class from all rows
+            $('#userGroupTable tbody tr').removeClass('selected-row');
+            $(row).addClass('selected-row');
+
+            var cells = row.getElementsByTagName("td");
+            const serial = cells[0].innerText.trim();
+            const groupName = cells[2].innerText.trim();
+            const status = cells[3].innerText.trim();
+
+            document.getElementById("usergroupserial").value = serial;
+            document.getElementById("usergroupname").value = groupName;
+            document.getElementById("status").value = status;
+
+            // Update mode badge
+            $('#formModeBadge').html('<ion-icon name="create-outline"></ion-icon> Editing Record #' + serial).css('color', '#fbbf24');
+
+            // Scroll smoothly to form
+            document.getElementById("createUserGroupForm").scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById("usergroupserial").value = "";
+            document.getElementById("usergroupname").value = "";
+            document.getElementById("status").value = "Active";
+            $('#userGroupTable tbody tr').removeClass('selected-row');
+            $('#formModeBadge').html('<ion-icon name="add-circle-outline"></ion-icon> Create Mode').css('color', '#60a5fa');
+        }
+
+        $(document).ready(function () {
+            // Real-time Table Search Filter
+            $('#tableSearchInput').on('keyup input', function () {
+                const query = $(this).val().toLowerCase().trim();
+                $('#userGroupTable tbody tr').each(function () {
+                    const text = $(this).text().toLowerCase();
+                    if (text.indexOf(query) !== -1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+
+            // Clean up toast
+            setTimeout(function () {
+                const alert = document.querySelector('.alert');
+                if (alert) alert.style.display = 'none';
+            }, 3000);
+        });
+    </script>
+}

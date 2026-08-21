@@ -1,0 +1,658 @@
+@model List<MvcApplication1.Models.UserMasterModels>
+@{
+    ViewBag.Title = "Create User - Parent";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var students = ViewBag.AllStudents as List<MvcApplication1.Models.StudentModels> ?? new List<MvcApplication1.Models.StudentModels>();
+}
+
+<style>
+    .admin-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .admin-card:hover {
+        box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.06);
+    }
+
+    .card-header-admin {
+        padding: 1.25rem 1.5rem;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .card-header-admin h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.15rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-body-admin {
+        padding: 1.75rem;
+    }
+
+    .custom-input-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .custom-input-group ion-icon.input-icon {
+        position: absolute;
+        left: 14px;
+        font-size: 1.25rem;
+        color: #64748b;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .custom-input-group .form-control,
+    .custom-input-group .form-select {
+        padding-left: 44px;
+        padding-right: 44px;
+        height: 48px;
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        font-weight: 500;
+        color: #1e293b;
+        background-color: #f8fafc;
+        transition: all 0.2s ease;
+    }
+
+    .custom-input-group .form-control:focus,
+    .custom-input-group .form-select:focus {
+        background-color: #ffffff;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    }
+
+    .password-toggle-btn {
+        position: absolute;
+        right: 12px;
+        background: none;
+        border: none;
+        color: #64748b;
+        font-size: 1.25rem;
+        cursor: pointer;
+        z-index: 5;
+        padding: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: color 0.2s ease;
+    }
+
+    .password-toggle-btn:hover {
+        color: #1e293b;
+    }
+
+    .feedback-label {
+        font-size: 0.82rem;
+        margin-top: 5px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-weight: 500;
+    }
+
+    .strength-meter-container {
+        margin-top: 8px;
+    }
+
+    .strength-meter {
+        height: 5px;
+        border-radius: 4px;
+        background-color: #e2e8f0;
+        overflow: hidden;
+        margin-top: 5px;
+    }
+
+    .strength-meter-bar {
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
+
+    /* Modern Table Styling */
+    .table-modern {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table-modern thead th {
+        background-color: #f8fafc;
+        color: #475569;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 12px 16px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .table-modern tbody tr {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .table-modern tbody tr:hover {
+        background-color: #f0f7ff !important;
+    }
+
+    .table-modern tbody tr.selected-row {
+        background-color: #e0f2fe !important;
+        border-left: 4px solid #0284c7;
+    }
+
+    .table-modern tbody td {
+        padding: 14px 16px;
+        vertical-align: middle;
+        color: #334155;
+        font-weight: 500;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.92rem;
+    }
+
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.78rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .mode-badge {
+        background: rgba(255, 255, 255, 0.15);
+        color: #60a5fa;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <!-- Form Card -->
+    <div class="admin-card">
+        <div class="card-header-admin">
+            <h5>
+                <ion-icon name="people-outline" style="font-size: 1.5rem; color: #60a5fa;"></ion-icon>
+                <span>Create User Account - Parent</span>
+            </h5>
+            <span class="mode-badge" id="formModeBadge">
+                <ion-icon name="add-circle-outline"></ion-icon> Create Mode
+            </span>
+        </div>
+        <div class="card-body-admin">
+            @using (Html.BeginForm("CreateUserParent", "Admin", FormMethod.Post, new { enctype = "multipart/form-data", id = "createuserForm", onsubmit = "return validateForm();" }))
+            {
+                <input type="hidden" id="userserial" name="UserSerial" />
+                <input type="hidden" id="studentserial" name="StudentSerial" />
+
+                <div class="row g-3">
+                    <!-- Student Select -->
+                    <div class="col-md-6">
+                        <label class="form-label text-dark fw-semibold small mb-1">Select Student <span class="text-danger">*</span></label>
+                        <div class="custom-input-group">
+                            <ion-icon name="school-outline" class="input-icon"></ion-icon>
+                            <select id="regnoDropdown" class="form-select" onchange="loadStudentDetails(this.value)" required>
+                                <option value="">-- Select Student Reg No --</option>
+                                @foreach (var student in students)
+                                {
+                                    <option value="@student.RegNo">@student.RegNo - @student.FullName</option>
+                                }
+                            </select>
+                        </div>
+                        <div id="studentFeedback" class="feedback-label text-muted"></div>
+                    </div>
+
+                    <!-- User Group Select -->
+                    <div class="col-md-6">
+                        <label class="form-label text-dark fw-semibold small mb-1">User Group <span class="text-danger">*</span></label>
+                        <div class="custom-input-group">
+                            <ion-icon name="people-outline" class="input-icon"></ion-icon>
+                            <select id="usergroupserial" name="UserGroupSerial" class="form-select" required>
+                                <option value="5" selected>Parent</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Parent Type (Auto-filled) -->
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary fw-semibold small mb-1">Parent Type (Auto-Filled)</label>
+                        <div class="custom-input-group">
+                            <ion-icon name="ribbon-outline" class="input-icon"></ion-icon>
+                            <input type="text" id="parenttype" name="GuardianType" class="form-control bg-light" placeholder="Father / Mother / Guardian" readonly />
+                        </div>
+                    </div>
+
+                    <!-- Parent Name (Auto-filled) -->
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary fw-semibold small mb-1">Parent Name (Auto-Filled)</label>
+                        <div class="custom-input-group">
+                            <ion-icon name="person-outline" class="input-icon"></ion-icon>
+                            <input type="text" id="parentname" name="GuardianName" class="form-control bg-light" placeholder="Guardian Full Name" readonly />
+                        </div>
+                    </div>
+
+                    <!-- Username -->
+                    <div class="col-md-6">
+                        <label class="form-label text-dark fw-semibold small mb-1">Username <span class="text-danger">*</span></label>
+                        <div class="custom-input-group">
+                            <ion-icon name="at-outline" class="input-icon"></ion-icon>
+                            <input type="text" id="username" name="UserName" class="form-control" placeholder="Enter parent username" required autocomplete="off" />
+                        </div>
+                        <div id="usernameFeedback" class="feedback-label"></div>
+                    </div>
+
+                    <!-- PIN -->
+                    <div class="col-md-6">
+                        <label class="form-label text-dark fw-semibold small mb-1">4-Digit PIN <span class="text-danger">*</span></label>
+                        <div class="custom-input-group">
+                            <ion-icon name="keypad-outline" class="input-icon"></ion-icon>
+                            <input type="text" id="pin" name="PinNo" class="form-control" placeholder="e.g. 1234" maxlength="4" required autocomplete="off" />
+                        </div>
+                        <div id="pinFeedback" class="feedback-label"></div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="col-md-6">
+                        <label class="form-label text-dark fw-semibold small mb-1">Password <span class="text-danger">*</span></label>
+                        <div class="custom-input-group">
+                            <ion-icon name="lock-closed-outline" class="input-icon"></ion-icon>
+                            <input type="password" id="password" name="Password" class="form-control" placeholder="Min 6 chars (letters & numbers)" required />
+                            <button type="button" class="password-toggle-btn me-1" title="Toggle password visibility">
+                                <ion-icon name="eye-outline"></ion-icon>
+                            </button>
+                        </div>
+                        <div class="strength-meter-container">
+                            <div class="strength-meter">
+                                <div class="strength-meter-bar" id="strengthBar"></div>
+                            </div>
+                        </div>
+                        <div id="passwordFeedback" class="feedback-label text-muted"></div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="col-md-6">
+                        <label class="form-label text-dark fw-semibold small mb-1">Status <span class="text-danger">*</span></label>
+                        <div class="custom-input-group">
+                            <ion-icon name="options-outline" class="input-icon"></ion-icon>
+                            <select id="status" name="Status" class="form-select" required>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-2" id="btnSaveUser">
+                        <ion-icon name="save-outline"></ion-icon> Save Parent Account
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-2" onclick="resetForm()">
+                        <ion-icon name="refresh-outline"></ion-icon> Clear / Reset
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Data Table Card -->
+    <div class="admin-card">
+        <div class="card-header-admin">
+            <h5>
+                <ion-icon name="list-outline" style="font-size: 1.4rem; color: #a78bfa;"></ion-icon>
+                <span>Parent User Accounts Table</span>
+                <span class="badge bg-primary rounded-pill ms-2" style="font-size: 0.8rem;">@Model.Count Accounts</span>
+            </h5>
+            <div class="custom-input-group" style="max-width: 300px;">
+                <ion-icon name="search-outline" class="input-icon" style="color: #ffffff; opacity: 0.7;"></ion-icon>
+                <input type="text" id="tableSearchInput" class="form-control text-white" placeholder="Search parent accounts..." style="background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); height: 40px; font-size: 0.88rem;" />
+            </div>
+        </div>
+        <div class="p-0">
+            <div class="table-responsive">
+                <table class="table table-modern" id="parentUserTable">
+                    <thead>
+                        <tr>
+                            <th style="display: none;">Serial No</th>
+                            <th style="width: 60px;">No</th>
+                            <th>Student Reg No</th>
+                            <th>Student Name</th>
+                            <th>Parent Type</th>
+                            <th>Parent Name</th>
+                            <th style="display: none;">username</th>
+                            <th style="display: none;">pin</th>
+                            <th style="display: none;">password</th>
+                            <th style="display: none;">UserGroupSerial</th>
+                            <th>User Group</th>
+                            <th style="width: 120px;">Status</th>
+                            <th style="width: 90px;" class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            var isActive = (user.Status ?? "").ToLower() == "active";
+                            <tr onclick="fillForm(this)">
+                                <td style="display: none;">@user.UserSerial</td>
+                                <td class="fw-bold text-secondary">@user.No</td>
+                                <td><span class="badge bg-light text-dark border font-monospace">@user.RegNo</span></td>
+                                <td class="fw-semibold text-dark">@user.FullName</td>
+                                <td><span class="badge bg-info text-dark">@user.GuardianType</span></td>
+                                <td>@user.GuardianName</td>
+                                <td style="display: none;">@user.UserName</td>
+                                <td style="display: none;">@user.PinNo</td>
+                                <td style="display: none;">@user.Password</td>
+                                <td style="display: none;">@user.UserGroupSerial</td>
+                                <td>@user.UserGroupName</td>
+                                <td>
+                                    <span class="status-badge @(isActive ? "bg-success text-white" : "bg-warning text-dark")">
+                                        <ion-icon name="@(isActive ? "checkmark-circle" : "alert-circle")"></ion-icon>
+                                        @user.Status
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-light border rounded-2" title="Click to edit">
+                                        <ion-icon name="create-outline" style="font-size: 1rem; color: #3b82f6;"></ion-icon>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function loadStudentDetails(regNo) {
+            const feedback = $('#studentFeedback');
+            if (!regNo) {
+                document.getElementById("studentserial").value = '';
+                document.getElementById("parentname").value = '';
+                document.getElementById("parenttype").value = '';
+                feedback.html('');
+                return;
+            }
+
+            feedback.html('<div class="spinner-border spinner-border-sm text-primary me-1"></div> Loading parent info...');
+
+            fetch(`/Student/LookupStudent?regNo=${regNo}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data) {
+                        document.getElementById("studentserial").value = data.StudentSerial || '';
+                        document.getElementById("parentname").value = data.GuardianName || '';
+                        document.getElementById("parenttype").value = data.GuardianType || '';
+                        feedback.removeClass('text-muted text-danger').addClass('text-success')
+                                .html('<ion-icon name="checkmark-circle-outline"></ion-icon> Parent details loaded.');
+                    } else {
+                        document.getElementById("studentserial").value = '';
+                        document.getElementById("parentname").value = '';
+                        document.getElementById("parenttype").value = '';
+                        feedback.removeClass('text-muted text-success').addClass('text-danger')
+                                .html('<ion-icon name="alert-circle-outline"></ion-icon> Student parent details not found.');
+                    }
+                })
+                .catch(err => {
+                    feedback.removeClass('text-muted text-success').addClass('text-danger')
+                            .html('<ion-icon name="alert-circle-outline"></ion-icon> Error fetching student details.');
+                });
+        }
+
+        function fillForm(row) {
+            $('#parentUserTable tbody tr').removeClass('selected-row');
+            $(row).addClass('selected-row');
+
+            var cells = row.getElementsByTagName("td");
+            const userSerial = cells[0].innerText.trim();
+            const regno = cells[2].innerText.trim();
+            const guardianType = cells[4].innerText.trim();
+            const guardianName = cells[5].innerText.trim();
+            const username = cells[6].innerText.trim();
+            const pin = cells[7].innerText.trim();
+            const password = cells[8].innerText.trim();
+            const groupSerial = cells[9].innerText.trim();
+            const status = cells[11].innerText.trim();
+
+            document.getElementById("userserial").value = userSerial;
+            document.getElementById("regnoDropdown").value = regno;
+            document.getElementById("parenttype").value = guardianType;
+            document.getElementById("parentname").value = guardianName;
+            document.getElementById("usergroupserial").value = groupSerial;
+            document.getElementById("username").value = username;
+            document.getElementById("pin").value = pin;
+            document.getElementById("password").value = password;
+            document.getElementById("status").value = status;
+
+            loadStudentDetails(regno);
+
+            $('#formModeBadge').html('<ion-icon name="create-outline"></ion-icon> Editing Record #' + userSerial).css('color', '#fbbf24');
+            document.getElementById("createuserForm").scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById("userserial").value = "";
+            document.getElementById("studentserial").value = "";
+            document.getElementById("regnoDropdown").value = "";
+            document.getElementById("parenttype").value = "";
+            document.getElementById("parentname").value = "";
+            document.getElementById("usergroupserial").value = "8";
+            document.getElementById("username").value = "";
+            document.getElementById("pin").value = "";
+            document.getElementById("password").value = "";
+            document.getElementById("status").value = "Active";
+
+            $('#studentFeedback, #usernameFeedback, #pinFeedback, #passwordFeedback').html('');
+            $('#strengthBar').css({ width: '0%', backgroundColor: '#e2e8f0' });
+            $('#parentUserTable tbody tr').removeClass('selected-row');
+            $('#formModeBadge').html('<ion-icon name="add-circle-outline"></ion-icon> Create Mode').css('color', '#60a5fa');
+        }
+
+        let usernameTimer = null;
+        let pinTimer = null;
+
+        $(document).ready(function () {
+            // Password Eye Toggle
+            $('.password-toggle-btn').on('click', function (e) {
+                e.preventDefault();
+                const input = $(this).siblings('input');
+                const icon = $(this).find('ion-icon');
+
+                if (input.attr('type') === 'password') {
+                    input.attr('type', 'text');
+                    icon.attr('name', 'eye-off-outline');
+                } else {
+                    input.attr('type', 'password');
+                    icon.attr('name', 'eye-outline');
+                }
+            });
+
+            // Live Username Availability Check
+            $('#username').on('keyup input', function () {
+                clearTimeout(usernameTimer);
+                const username = $(this).val().trim();
+                const userSerial = $('#userserial').val();
+                const feedback = $('#usernameFeedback');
+
+                if (username === '') {
+                    feedback.html('');
+                    return;
+                }
+
+                feedback.removeClass('text-success text-danger').addClass('text-muted')
+                        .html('<div class="spinner-border spinner-border-sm text-primary me-1"></div> Checking availability...');
+
+                usernameTimer = setTimeout(function () {
+                    $.ajax({
+                        url: '/Admin/IsUserNameAvailable',
+                        type: 'GET',
+                        data: { username: username, userSerial: userSerial },
+                        success: function (isAvailable) {
+                            if (isAvailable === true || isAvailable === "true") {
+                                feedback.removeClass('text-muted text-danger').addClass('text-success')
+                                        .html('<ion-icon name="checkmark-circle-outline"></ion-icon> Username available!');
+                            } else {
+                                feedback.removeClass('text-muted text-success').addClass('text-danger')
+                                        .html('<ion-icon name="close-circle-outline"></ion-icon> Username already taken.');
+                            }
+                        }
+                    });
+                }, 400);
+            });
+
+            // Live PIN Format & Availability Check
+            $('#pin').on('keyup input', function () {
+                clearTimeout(pinTimer);
+                const pin = $(this).val().trim();
+                const userSerial = $('#userserial').val();
+                const feedback = $('#pinFeedback');
+
+                if (pin === '') {
+                    feedback.html('');
+                    return;
+                }
+
+                if (!/^\d{4}$/.test(pin)) {
+                    feedback.removeClass('text-success text-muted').addClass('text-danger')
+                            .html('<ion-icon name="alert-circle-outline"></ion-icon> PIN must be exactly 4 digits.');
+                    return;
+                }
+
+                feedback.removeClass('text-success text-danger').addClass('text-muted')
+                        .html('<div class="spinner-border spinner-border-sm text-primary me-1"></div> Checking PIN...');
+
+                pinTimer = setTimeout(function () {
+                    $.ajax({
+                        url: '/Admin/IsPinAvailable',
+                        type: 'GET',
+                        data: { pin: pin, userSerial: userSerial },
+                        success: function (isAvailable) {
+                            if (isAvailable === true || isAvailable === "true") {
+                                feedback.removeClass('text-muted text-danger').addClass('text-success')
+                                        .html('<ion-icon name="checkmark-circle-outline"></ion-icon> PIN available!');
+                            } else {
+                                feedback.removeClass('text-muted text-success').addClass('text-danger')
+                                        .html('<ion-icon name="close-circle-outline"></ion-icon> PIN already taken.');
+                            }
+                        }
+                    });
+                }, 400);
+            });
+
+            // Live Password Strength Meter
+            $('#password').on('keyup input', function () {
+                const val = $(this).val();
+                const hasLen = val.length >= 6;
+                const hasLet = /[A-Za-z]/.test(val);
+                const hasNum = /\d/.test(val);
+
+                let score = 0;
+                if (val.length > 0) score += 1;
+                if (hasLen) score += 1;
+                if (hasLet && hasNum) score += 1;
+
+                const bar = $('#strengthBar');
+                const feedback = $('#passwordFeedback');
+
+                if (val.length === 0) {
+                    bar.css({ width: '0%', backgroundColor: '#e2e8f0' });
+                    feedback.html('');
+                } else if (score < 3) {
+                    bar.css({ width: '40%', backgroundColor: '#ef4444' });
+                    feedback.html('<span class="text-danger"><ion-icon name="alert-circle-outline"></ion-icon> Requires 6+ chars with letters & numbers.</span>');
+                } else {
+                    bar.css({ width: '100%', backgroundColor: '#10b981' });
+                    feedback.html('<span class="text-success"><ion-icon name="checkmark-circle-outline"></ion-icon> Strong password format.</span>');
+                }
+            });
+
+            // Real-time Table Search Filter
+            $('#tableSearchInput').on('keyup input', function () {
+                const query = $(this).val().toLowerCase().trim();
+                $('#parentUserTable tbody tr').each(function () {
+                    const text = $(this).text().toLowerCase();
+                    if (text.indexOf(query) !== -1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+        });
+
+        // Form Submit Validation
+        function validateForm() {
+            const username = document.getElementById("username").value.trim();
+            const userSerial = document.getElementById("userserial").value;
+            const pin = document.getElementById("pin").value.trim();
+            const password = document.getElementById("password").value.trim();
+
+            if (!/^\d{4}$/.test(pin)) {
+                alert("PIN must be exactly 4 digits.");
+                document.getElementById("pin").focus();
+                return false;
+            }
+
+            if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(password)) {
+                alert("Password must be at least 6 characters long and contain both letters and numbers.");
+                document.getElementById("password").focus();
+                return false;
+            }
+
+            let isAvailable = false;
+            let isPinAvailable = false;
+
+            $.ajax({
+                url: '/Admin/IsUserNameAvailable',
+                type: 'GET',
+                data: { username: username, userSerial: userSerial },
+                async: false,
+                success: function (res) { isAvailable = res; }
+            });
+
+            if (!isAvailable) {
+                alert("Username already exists. Please choose another.");
+                document.getElementById("username").focus();
+                return false;
+            }
+
+            $.ajax({
+                url: '/Admin/IsPinAvailable',
+                type: 'GET',
+                data: { pin: pin, userSerial: userSerial },
+                async: false,
+                success: function (res) { isPinAvailable = res; }
+            });
+
+            if (!isPinAvailable) {
+                alert("PIN already exists. Please choose another.");
+                document.getElementById("pin").focus();
+                return false;
+            }
+
+            return true;
+        }
+    </script>
+}

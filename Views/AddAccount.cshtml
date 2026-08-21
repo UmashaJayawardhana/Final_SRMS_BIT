@@ -1,0 +1,23 @@
+﻿@model MvcApplication1.Models.BankAccountModel
+@{
+    ViewBag.Title = "AddAccount";
+}
+
+<h2>AddAccount</h2>
+
+@using (Html.BeginForm())
+{
+    <div>
+        <label>Name :</label>
+        @Html.TextBoxFor(m => m.Name, new {@class = "form-control" })
+        @Html.ValidationMessageFor(m => m.Name)
+    </div>
+    
+    <div>
+        <label>Account No:</label>
+        @Html.TextBoxFor(m => m.AccountNo, new {@class = "form-control" })
+        @Html.ValidationMessageFor(m => m.AccountNo)
+    </div>
+    
+    <input type="submit" value="Add Account" class="btn btn primary" />
+}

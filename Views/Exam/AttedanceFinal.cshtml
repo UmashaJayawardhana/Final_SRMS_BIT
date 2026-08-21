@@ -1,0 +1,323 @@
+﻿@{
+    ViewBag.Title = "AttedanceFinal";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- AttedanceFinal.cshtml content -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSS -->
+    <link rel="stylesheet" href="@Url.Content("~/Content/StyleSheet4.css")" />
+
+    <title>AttedanceFinal</title>
+    
+    <style>
+        /* Scoped styles for Attendance Final */
+        
+        /* 3-Column Form Grid Layout */
+        .form-grid-container {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr 1fr !important;
+            column-gap: 24px !important;
+            row-gap: 0 !important;
+        }
+        @@media (max-width: 992px) {
+            .form-grid-container {
+                grid-template-columns: 1fr 1fr !important;
+            }
+        }
+        @@media (max-width: 768px) {
+            .form-grid-container {
+                grid-template-columns: 1fr !important;
+            }
+        }
+        .form-grid-container .form-group {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+            margin-bottom: 1.25rem !important;
+        }
+        .form-grid-container label {
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 2px;
+            width: auto !important;
+        }
+        .form-grid-container .form-control {
+            height: 44px !important;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            padding: 8px 12px;
+            font-size: 14px;
+            width: 100% !important;
+        }
+        .form-grid-container .form-control:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            outline: none;
+        }
+
+        /* Actions Row */
+        .actions-row {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .btn-custom {
+            height: 44px;
+            padding: 0 24px;
+            font-weight: 600;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            min-width: 120px;
+            transition: all 0.2s ease;
+        }
+        .btn-custom:hover {
+            transform: translateY(-1px);
+            opacity: 0.95;
+        }
+    </style>
+</head>
+<body>
+    @model List<MvcApplication1.Models.ExamScheduleModels>
+    @{
+        var terms = ViewBag.Terms as List<MvcApplication1.Models.TermModels> ?? new List<MvcApplication1.Models.TermModels>();
+    }
+
+    <!-- Form Container -->
+    <div class="container" style="max-width: 1100px; margin: 0 auto;">
+        @using (Html.BeginForm("ExamSchedule", "Exam", FormMethod.Post, new { enctype = "multipart/form-data", @class = "addform", id = "ExamScheduleForm" }))
+        {
+            <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-2">
+                <h4 id="formHeader" class="m-0 border-0 p-0 d-flex align-items-center gap-2" style="font-size: 18px; font-weight: 700; color: #0f172a; border-bottom: none; width: 100%;">
+                    <span>&#x2795;</span> Attendance - Final
+                </h4>
+            </div>
+
+            <input type="hidden" id="examscheduleserial" name="ExamScheduleSerial" />
+
+            <div class="form-grid-container">
+                <div class="form-group">
+                    <label for="year">Year:</label>
+                    @Html.DropDownList("Year", (SelectList)ViewBag.Years, "--Select Year--", new { @class = "form-control", @id = "year", required = "required" })
+                </div>
+                <div class="form-group">
+                    <label for="batchserial">Batch:</label>
+                    <select id="batchserial" class="form-control" name="BatchSerial" required>
+                        <option value="">-- Select Batch --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="classserial">Class:</label>
+                    <select id="classserial" class="form-control" name="ClassSerial" required>
+                        <option value="">-- Select Class --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="termserial">Term:</label>
+                    <select id="termserial" class="form-control" name="TermSerial" required>
+                        <option value="">-- Select Term --</option>
+                        @foreach (var term in terms)
+                        {
+                            <option value="@term.TermSerial">@term.TermName</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="subjectserial">Subject:</label>
+                    <select id="subjectserial" class="form-control" name="SubjectSerial" required>
+                        <option value="">-- Select Subject --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="examserial">Exam:</label>
+                    <select id="examserial" class="form-control" name="ExamSerial" required>
+                        <option value="">-- Select Exam --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="actions-row">
+                <button type="button" id="searchBtn" class="btn-custom" style="background-color: #3b82f6; color: white;" onclick="searchStudents()"> Search Students</button>
+                <button type="button" class="btn-custom" style="background-color: #ef4444; color: white;" onclick="resetFilterForm()"> Clear</button>
+            </div>
+        }
+
+        <div id="studentsGrid" class="mt-4"></div>
+    </div>
+
+    @section Scripts {
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                // Dropdown cascade bindings
+                $('#year').change(function () {
+                    loadbatches();
+                });
+
+                $('#batchserial').change(function () {
+                    loadClasses();
+                    //loadSubjects();
+                });
+
+                $('#classserial').change(function () {
+                    loadSubjects();
+                });
+
+                $('#termserial').change(function () {
+                    loadExam();
+                });
+
+                $('#subjectserial').change(function () {
+                    loadExam();
+                });
+            });
+
+            function loadbatches() {
+                var year = $('#year').val();
+                if (year) {
+                    $.ajax({
+                        url: '/Exam/GetBatchesByYear',
+                        type: 'GET',
+                        data: { year: year },
+                        success: function (data) {
+                            var batchDropdown = $('#batchserial');
+                            batchDropdown.empty().append('<option value="">-- Select Batch --</option>');
+                            $.each(data, function (i, batch) {
+                                batchDropdown.append('<option value="' + batch.Value + '">' + batch.Text + '</option>');
+                            });
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error loading batches:", error);
+                        }
+                    });
+                }
+            }
+
+            function loadClasses() {
+                var batchSerial = $('#batchserial').val();
+                if (batchSerial) {
+                    $.ajax({
+                        url: '/Exam/GetClassesByBatchByClassTeacher',
+                        type: 'GET',
+                        data: { batchSerial: batchSerial },
+                        success: function (data) {
+                            var classDropdown = $('#classserial');
+                            classDropdown.empty().append('<option value="">-- Select Class --</option>');
+                            $.each(data, function (i, item) {
+                                classDropdown.append('<option value="' + item.Value + '">' + item.Text + '</option>');
+                            });
+                        }
+                    });
+                }
+            }
+
+            function loadSubjects() {
+                var classSerial = $('#classserial').val();
+                if (classSerial) {
+                    $.ajax({
+                        url: '/Exam/GetSubjectsByClassByTeacher',
+                        type: 'GET',
+                        data: { classSerial: classSerial },
+                        success: function (data) {
+                            var subjectDropdown = $('#subjectserial');
+                            subjectDropdown.empty().append('<option value="">-- Select Subject --</option>');
+                            $.each(data, function (i, item) {
+                                subjectDropdown.append('<option value="' + item.Value + '">' + item.Text + '</option>');
+                            });
+                        }
+                    });
+                }
+            }
+
+            function loadExam() {
+                var termserial = $('#termserial').val();
+                var subjectserial = $('#subjectserial').val();
+                if (termserial && subjectserial) {
+                    $.ajax({
+                        url: '/Exam/GetExamsByTermOnlyHeldFinal',
+                        type: 'GET',
+                        data: { termserial: termserial, subjectserial: subjectserial },
+                        success: function (data) {
+                            var examDropdown = $('#examserial');
+                            examDropdown.empty().append('<option value="">-- Select Exam --</option>');
+                            $.each(data, function (i, item) {
+                                examDropdown.append('<option value="' + item.Value + '">' + item.Text + '</option>');
+                            });
+                        }
+                    });
+                }
+            }
+
+            function searchStudents() {
+                var year = $('#year').val();
+                var batchserial = $('#batchserial').val();
+                var classserial = $('#classserial').val();
+                var termserial = $('#termserial').val();
+                var subjectserial = $('#subjectserial').val();
+                var examserial = $('#examserial').val();
+
+                if (!year || !batchserial || !classserial || !termserial || !subjectserial || !examserial) {
+                    alert("Please select all fields.");
+                    return;
+                }
+
+                $("#searchBtn").text("Searching...").prop("disabled", true);
+
+                $.ajax({
+                    url: '/Exam/SearchStudentsforFinalAttendance',
+                    type: 'GET',
+                    data: {
+                        year: year,
+                        batchserial: batchserial,
+                        classserial: classserial,
+                        termserial: termserial,
+                        subjectserial: subjectserial,
+                        examserial: examserial
+                    },
+                    success: function (response) {
+                        $('#studentsGrid').html(response);
+                        $("#searchBtn").text("Search Students").prop("disabled", false);
+                    },
+                    error: function () {
+                        alert("Error occurred while searching students.");
+                        $("#searchBtn").text("Search Students").prop("disabled", false);
+                    }
+                });
+            }
+
+            function resetFilterForm() {
+                $('#year').val('');
+                $('#batchserial').empty().append('<option value="">-- Select Batch --</option>');
+                $('#classserial').empty().append('<option value="">-- Select Class --</option>');
+                $('#subjectserial').empty().append('<option value="">-- Select Subject --</option>');
+                $('#examserial').empty().append('<option value="">-- Select Exam --</option>');
+                $('#termserial').val('');
+                $('#studentsGrid').empty();
+            }
+
+            function filterGrid() {
+                var query = $("#gridSearch").val().toLowerCase();
+                var rows = $("#studentsGrid tbody tr");
+                rows.each(function () {
+                    var text = $(this).text().toLowerCase();
+                    if (text.indexOf(query) > -1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+        </script>
+    }
+</body>
+</html>

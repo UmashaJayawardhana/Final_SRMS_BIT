@@ -1,0 +1,50 @@
+@model List<MvcApplication1.Models.StudentAddToNewBatchModels>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th style="display:none;">Serial No</th>
+            <th>No</th>
+            <th>Full Name</th>
+            <th>Reg No</th>
+            <th>Status</th>
+            <th>Class</th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            <tr>
+                <td style="display:none;">
+                    <input type="hidden" name="StudentSerial" value="@Model[i].StudentSerial" />
+                </td>
+                <td>@(i + 1)</td>
+                <td>@Model[i].FullName</td>
+                <td>@Model[i].RegNo</td>
+                <td>
+                    <select name="Status" class="form-control" required>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control" name="NewClassSerial" required>
+                        <option value="">-- Select Class --</option>
+                        @if (ViewBag.Classes != null)
+                        {
+                            foreach (var clz in ViewBag.Classes as List<SelectListItem>)
+                            {
+                                <option value="@clz.Value">@clz.Text</option>
+                            }
+                        }
+                    </select>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="form-group text-center mt-4" style="display: flex; justify-content: center; gap: 12px; margin-top: 24px;">
+    <button type="button" class="btn btn-success" onclick="saveAllAssignments();" style="height: 44px; padding: 0 24px; font-weight: 600; border-radius: 10px; background-color: #10b981; color: white; border: none; cursor: pointer; min-width: 110px;">Save</button>
+    <button type="button" class="btn btn-danger" onclick="location.reload();" style="height: 44px; padding: 0 24px; font-weight: 600; border-radius: 10px; background-color: #ef4444 !important; color: white; border: none; cursor: pointer; min-width: 110px;">Cancel</button>
+</div>

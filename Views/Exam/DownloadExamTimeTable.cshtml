@@ -1,0 +1,132 @@
+@model List<MvcApplication1.Models.ExamScheduleModels>
+@{
+    ViewBag.Title = "DownloadExamTimeTable";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- DownloadExamTimeTable.cshtml content -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSS -->
+    <link rel="stylesheet" href="@Url.Content("~/Content/StyleSheet4.css")" />
+    <title>Download Exam Time Table</title>
+</head>
+<body>
+    
+<style>
+.addtable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #ffffff;
+}
+
+.addtable th, .addtable td {
+    border: 1px solid black !important;
+    padding: 10px;
+    text-align: center;
+}
+.btn-download {
+    background-color: #007bff !important; /* Blue for download */
+    color: white !important;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 4px 6px -1px rgba(0, 123, 255, 0.2) !important;
+    transition: all 0.2s ease;
+}
+.btn-download:hover {
+    background-color: #0056b3 !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 123, 255, 0.3) !important;
+    transform: translateY(-1px);
+}
+</style>
+
+     <div class="addform" style="max-width: 1100px; margin: 20px auto;">
+        <div class="text-center">
+            <h4>Download Exam Time Table</h4>
+            <br />
+
+            @if (Model != null && Model.Any())
+            {
+                <table class="addtable">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Year</th>
+                            <th>Term</th>
+                            <th>Exam</th>
+                            <th>Batch</th>
+                            <th>Class</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ int i = 1; }
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@(i++)</td>
+                                <td>@item.Year</td>
+                                <td>@item.TermName</td>
+                                <td>@item.ExamName</td>
+                                <td>@item.BatchName</td>
+                                <td>@item.ClassName</td>
+                                <td>
+                                    @if (item.ClassSerial > 0)
+                                    {
+                                        <a href="@Url.Action("ViewExamTimeTable", "Exam", new { year = item.Year, batchserial = item.BatchSerial, classserial = item.ClassSerial, termserial = item.TermSerial, examserial = item.ExamSerial })"
+                                           class="btn-download">
+                                            Download
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a href="@Url.Action("ViewFinalExamTimeTable", "Exam", new { year = item.Year, batchserial = item.BatchSerial, termserial = item.TermSerial, examserial = item.ExamSerial })"
+                                           class="btn-download">
+                                            Download
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div style="padding: 20px; font-size: 16px; color: #475569;">
+                    <p>No uploaded exam timetables found in the database.</p>
+                </div>
+            }
+        </div>
+     </div>
+
+    @if (TempData["Message"] != null)
+     {
+        <script>
+            window.onload = function () {
+                var toastLive = document.getElementById('liveToast');
+                var toast = new bootstrap.Toast(toastLive);
+                toast.show();
+            };
+        </script>
+     }
+     
+     <script>
+         setTimeout(function () {
+             const alert = document.querySelector('.alert');
+             if (alert) {
+                 alert.style.display = 'none';
+             }
+         }, 3000); // Hide after 3 seconds
+     </script>
+
+</body>
+</html>

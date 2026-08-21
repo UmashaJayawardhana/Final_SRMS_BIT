@@ -1,0 +1,280 @@
+/* StyleSheet4.css - Modern Reports & Detail Lists Styles */
+
+body {
+    background-color: #f8fafc !important; /* Premium Canvas Slate BG */
+}
+
+/* Form Wrapper Card (Wider for Reports) */
+.addform {
+    max-width: 1100px;
+    width: 100%;
+    margin: 20px auto 35px auto;
+    padding: 2.2rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background-color: #ffffff;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+}
+
+/* Headers */
+h4 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    max-width: 1100px;
+    width: 100%;
+    margin: 1.5rem auto 10px auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+/* Form Groups */
+.addform > div {
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Labels */
+.addform label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 4px;
+    display: inline-block;
+    width: auto !important; /* Reset layout inline widths */
+}
+
+/* Inputs & Dropdowns */
+.addform input[type="text"],
+.addform input[type="number"],
+.addform input[type="date"],
+.addform input[type="tel"],
+.addform select,
+.addform .form-control {
+    width: 100%;
+    height: 46px;
+    padding: 10px 16px;
+    font-size: 14.5px;
+    color: #1e293b;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    box-sizing: border-box;
+}
+
+.addform input::placeholder {
+    color: #94a3b8;
+}
+
+.addform input:focus,
+.addform select:focus,
+.addform .form-control:focus {
+    background-color: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+/* Buttons Area */
+.addform .button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 1.8rem;
+    margin-left: 0 !important;
+    width: 100% !important;
+}
+
+/* Buttons Styling */
+.addform button, 
+.addform input[type="submit"] {
+    height: 44px;
+    padding: 0 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: #3b82f6;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+    min-width: 110px;
+    margin: 0 !important;
+}
+
+.addform button:hover,
+.addform input[type="submit"]:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+}
+
+.addform button[style*="background-color: green"],
+.addform button[onclick*="reload"] {
+    background-color: #ef4444 !important;
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
+}
+
+.addform button[style*="background-color: green"]:hover,
+.addform button[onclick*="reload"]:hover {
+    background-color: #dc2626 !important;
+    box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3);
+}
+
+/* Tables Wrapper (Extra Wide for Complex Lists) */
+.addtable-container {
+    max-width: 1100px;
+    width: 100%;
+    margin: 1.5rem auto 3rem auto;
+    overflow-x: auto;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+}
+
+.addtable {
+    width: 100%;
+    margin: 0 !important;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+/* Headers */
+.addtable th {
+    background-color: #0f172a !important; /* Dark Slate Header */
+    color: #ffffff !important;
+    font-weight: 600;
+    padding: 14px 16px;
+    border: none !important;
+    text-align: left;
+}
+
+/* Cells */
+.addtable td {
+    padding: 12px 16px;
+    color: #334155;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    text-align: left;
+    transition: all 0.15s ease;
+}
+
+/* Row Hover & Alternating styles */
+.addtable tbody tr {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.addtable tbody tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+.addtable tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+.addtable tbody tr:hover td {
+    color: #0f172a;
+}
+
+/* Support for default ASP.NET MVC templates */
+fieldset {
+    max-width: 1100px;
+    width: 100%;
+    margin: 20px auto 35px auto;
+    padding: 2.2rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background-color: #ffffff;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+}
+
+legend {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    width: 100%;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 1.5rem;
+    float: none; /* Reset bootstrap absolute float */
+}
+
+.editor-label {
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.editor-label label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.editor-field {
+    margin-bottom: 1.25rem;
+}
+
+.editor-field input[type="text"],
+.editor-field input[type="password"],
+.editor-field input[type="email"] {
+    width: 100%;
+    height: 46px;
+    padding: 10px 16px;
+    font-size: 14.5px;
+    color: #1e293b;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    box-sizing: border-box;
+}
+
+.editor-field input[type="text"]:focus,
+.editor-field input[type="password"]:focus,
+.editor-field input[type="email"]:focus {
+    background-color: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+.editor-field .field-validation-error {
+    display: block;
+    color: #fca5a5;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* Submit input styling matching main buttons */
+input[type="submit"] {
+    height: 44px;
+    padding: 0 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: #3b82f6;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+    min-width: 110px;
+}
+
+input[type="submit"]:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+}
+

@@ -1,0 +1,392 @@
+@{
+    ViewBag.Title = "ApprovedResultSectionHead";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<!-- ApprovedResultSectionHead.cshtml content -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSS -->
+    <link rel="stylesheet" href="@Url.Content("~/Content/StyleSheet4.css")" />
+
+
+    <title>ApprovedResultSectionHead</title>
+
+</head>
+<body>
+    
+<style>
+.addform .row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+}
+.addform .row > div {
+    display: flex !important;
+    flex-direction: column !important;
+    margin-bottom: 1.25rem;
+}
+.inline-form-row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: flex-end !important;
+    gap: 12px !important;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+.inline-form-row > div {
+    flex: 1 1 150px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin-bottom: 0 !important;
+}
+.inline-form-row .button-group-inline {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 10px !important;
+    align-items: center !important;
+}
+.addtable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+     background-color: #ffffff;
+}
+
+.addtable th, .addtable td {
+    border: 1px solid black !important;
+    padding: 8px;
+    text-align: center;
+}
+
+.btn-search {
+    background-color: #22c55e !important; /* Green */
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.2) !important;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.btn-search:hover {
+    background-color: #16a34a !important;
+    box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3) !important;
+}
+
+.btn-cancel {
+    background-color: #ef4444 !important; /* Red */
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2) !important;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.btn-cancel:hover {
+    background-color: #dc2626 !important;
+    box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3) !important;
+}
+.table-responsive {
+    overflow-x: auto;
+    margin-top: 20px;
+    width: 100%;
+}
+</style>
+      
+    @model List<MvcApplication1.Models.ResultModels>
+    @{
+        
+        var terms = ViewBag.Terms as List<MvcApplication1.Models.TermModels>;
+    }
+    
+    <!-- Form -->
+    <div class="container">
+<h4>&#x2795; Approved Result - Section Head</h4>
+ @using (Html.BeginForm("ApprovedResultSectionHead", "Result", FormMethod.Post, new { enctype = "multipart/form-data", @class = "addform", id = "ApprovedResultsectionTeacherForm" }))
+ {
+      <!-- Form contents here -->      <input type="hidden" id="examresultserial" name="ExamResultSerial" />
+      <div class="inline-form-row">
+          <div>
+              <label for="year">Year:</label>
+              @Html.DropDownList("Year",(SelectList)ViewBag.Years, "--Select Year--", new { @class = "form-control", @id = "year",  required = "required" })
+          </div>
+          <div>
+              <label for="batchserial">Batch:</label>
+              <select id="batchserial" class="form-control" name="BatchSerial" required>
+                  <option value="0">All</option>
+              </select>
+          </div>
+          <div>
+              <label for="classserial">Class:</label>
+              <select id="classserial" class="form-control" name="ClassSerial" required>
+                  <option value="0">All</option>
+              </select>
+          </div>
+          <div>
+              <label for="termserial">Term:</label>
+              <select id="termserial" class="form-control" name="TermSerial" required>
+                  <option value="">-- Select Term --</option>
+                  @foreach (var term in terms)
+                  {
+                      <option value="@term.TermSerial">@term.TermName</option>
+                  }
+              </select>
+          </div>
+          <div>
+              <label for="examserial">Exam:</label>
+              <select id="examserial" class="form-control" name="ExamSerial" required>
+                  <option value="">-- Select Exam --</option>
+              </select>
+          </div>
+          <div class="button-group-inline">
+              <button type="button" class="btn-search" onclick="searchStudents()">Search</button>
+              <button type="button" class="btn-cancel" onclick="location.reload();">Cancel</button>
+          </div>
+      </div>
+
+ 
+<div id="studentsGrid">
+       
+    </div>
+
+        <div class="form-group mt-3" style="align-items: center;">
+             <button type="submit" class="btn btn-success" style="padding: 10px 20px; min-width: auto; height: auto; border-radius: 4px;">Approve</button>
+        </div>
+        }
+        </div>
+
+
+     @if (TempData["Message"] != null)
+     {
+    <script>
+        window.onload = function () {
+            var toastLive = document.getElementById('liveToast');
+            var toast = new bootstrap.Toast(toastLive);
+            toast.show();
+        };
+    </script>
+     }
+  @section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+
+            // log and bind year change
+            $('#year').change(function () {
+                console.log("Year changed to:", $(this).val());
+                loadbatches();
+            });
+
+            $('#batchserial').change(function () {
+                loadClasses();
+            });
+
+
+            $('#termserial').change(function () {
+                loadExam();
+            });
+
+            //load batches
+            function loadbatches() {
+                var year = $('#year').val();
+
+                if (year) {
+                    $.ajax({
+                        url: '/Result/GetBatchesByYearBothStatusBySectionHeadTeacher',
+                        type: 'GET',
+                        data: { year: year },
+                        success: function (data) {
+                            console.log("Batches received:", data); // debug
+                            var batchDropdown = $('#batchserial');
+                            batchDropdown.empty();
+                            batchDropdown.append('<option value="0">All</option>');
+                            $.each(data, function (i, batch) {
+                                batchDropdown.append('<option value="' + batch.Value + '">' + batch.Text + '</option>');
+                            });
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error loading batches:", error);
+                            alert('Failed to load batches.');
+                        }
+                    });
+                }
+            }
+
+
+            //load classes
+            function loadClasses() {
+                var batchSerial = $('#batchserial').val();
+
+                if(batchSerial != 0)
+                {
+                    if (batchSerial) {
+                        $.ajax({
+                            url: '/Result/GetClassesByBatchBothStatus',
+                            type: 'GET',
+                            data: { batchSerial: batchSerial },
+                            success: function (data) {
+                                var classDropdown = $('#classserial');
+                                classDropdown.empty().append('<option value="0">All</option>');
+                                $.each(data, function (i, item) {
+                                    classDropdown.append('<option value="' + item.Value + '">' + item.Text + '</option>');
+                                });
+                            }
+                        });
+                    }
+                }
+            }
+
+
+            //load exam
+            function loadExam() {
+                var termserial = $('#termserial').val();
+
+                if (termserial) {
+                    $.ajax({
+                        url: '/Result/GetExamsAllActiveHeldOnlyFinal',
+                        type: 'GET',
+                        data: { termserial: termserial },
+                        success: function (data) {
+                            var examDropdown = $('#examserial');
+                            examDropdown.empty().append('<option value="">-- Select Exam --</option>');
+                            $.each(data, function (i, item) {
+                                examDropdown.append('<option value="' + item.Value + '">' + item.Text + '</option>');
+                            });
+                        }
+                    });
+                }
+            }
+
+        });
+    </script>
+}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function searchStudents() {
+            var year = $('#year').val();
+            var batchserial = $('#batchserial').val();
+            var classserial = $('#classserial').val();
+            var termserial = $('#termserial').val();
+            var examserial = $('#examserial').val();
+
+
+            // Client-side validation
+            if (!year || !batchserial || !classserial || !termserial ||  !examserial) {
+                alert("Please select all fields.");
+                return;
+            }
+
+
+            $.ajax({
+                url: '/Result/SearchStudentsforApproveExamResultBySectionHead',
+                type: 'GET',
+                data: {
+                    year: year,
+                    batchserial: batchserial,
+                    classserial: classserial,
+                    termserial: termserial,
+                    examserial: examserial
+                },
+                success: function (data) {
+                    var html = '';
+                    if (data.length > 0) {
+                        var students = {};
+                        var subjects = [];
+                        var subjectKeys = {};
+
+                        // Collect unique subjects
+                        for (var i = 0; i < data.length; i++) {
+                            var subject = data[i].SubjectName;
+                            if (subject && !subjectKeys[subject]) {
+                                subjectKeys[subject] = true;
+                                subjects.push(subject);
+                            }
+                        }
+
+                        // Group data by RegNo
+                        for (var i = 0; i < data.length; i++) {
+                            var regNo = data[i].RegNo;
+                            if (!students[regNo]) {
+                                students[regNo] = {
+                                    FullName: data[i].FullName,
+                                    RegNo: data[i].RegNo,
+                                    ApprovedClassTeacher: data[i].ApprovedClassTeacher,
+                                    ApprovedByBatchHead: data[i].ApprovedByBatchHead,
+                                    ApprovedBySectionHead: data[i].ApprovedBySectionHead,
+                                    ExamResultSerials: [],
+                                    Subjects: {}
+                                };
+                            }
+                            if (data[i].SubjectName) {
+                                students[regNo].Subjects[data[i].SubjectName] = data[i].Result;
+                            }
+                            if (data[i].ExamResultSerial) {
+                                students[regNo].ExamResultSerials.push(data[i].ExamResultSerial);
+                            }
+                        }
+
+                        html += '<div class="table-responsive"><table class="addtable">';
+                        html += '<tr><th style="display:none;">Exam Result Serial</th><th>Reg No</th><th>Student Name</th>';
+                        for (var j = 0; j < subjects.length; j++) {
+                            html += '<th>' + subjects[j] + '</th>';
+                        }
+                        html += '<th>Approved - ClassTeacher</th><th>Approved - BatchHead</th><th>Approved - SectionHead</th></tr>';
+
+                        for (var key in students) {
+                            if (students.hasOwnProperty(key)) {
+                                var student = students[key];
+                                html += '<tr>';
+                                html += '<td style="display:none;">';
+                                for (var k = 0; k < student.ExamResultSerials.length; k++) {
+                                    html += '<input type="hidden" name="ExamResultSerials" value="' + student.ExamResultSerials[k] + '" />';
+                                }
+                                html += '</td>';
+                                html += '<td>' + student.RegNo + '</td>';
+                                html += '<td>' + student.FullName + '</td>';
+                                for (var j = 0; j < subjects.length; j++) {
+                                    var res = student.Subjects[subjects[j]];
+                                    html += '<td>' + (res != null ? res : "-") + '</td>';
+                                }
+                                html += '<td>' + (student.ApprovedClassTeacher || "") + '</td>';
+                                html += '<td>' + (student.ApprovedByBatchHead || "") + '</td>';
+                                html += '<td>' + (student.ApprovedBySectionHead || "") + '</td>';
+                                html += '</tr>';
+                            }
+                        }
+
+                        html += '</table></div>';
+
+                    } else {
+                        html = "<p>No students found.</p>";
+                    }
+
+                    $('#studentsGrid').html(html);
+                },
+
+                error: function () {
+                    alert("Error occurred.");
+                }
+            });
+        }
+</script>
+    
+     <script>
+         setTimeout(function () {
+             const alert = document.querySelector('.alert');
+             if (alert) {
+                 alert.style.display = 'none';
+             }
+         }, 3000); // Hide after 3 seconds
+</script>
+    
+    </body>
+
+    </html>

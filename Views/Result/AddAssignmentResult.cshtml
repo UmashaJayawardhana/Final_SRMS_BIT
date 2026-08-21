@@ -1,0 +1,463 @@
+@{
+    ViewBag.Title = "AddAssignmentResult";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- AddAssignmentResult.cshtml content -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSS -->
+    <link rel="stylesheet" href="@Url.Content("~/Content/StyleSheet4.css")" />
+
+    <title>AddAssignmentResult</title>
+
+</head>
+<body>
+    
+<style>
+.addform .row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+}
+.addform .row > div {
+    display: flex !important;
+    flex-direction: column !important;
+    margin-bottom: 1.25rem;
+}
+.inline-form-row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: flex-end !important;
+    gap: 12px !important;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+.inline-form-row > div {
+    flex: 1 1 150px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin-bottom: 0 !important;
+}
+.inline-form-row .button-group-inline {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 10px !important;
+    align-items: center !important;
+}
+.addtable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+     background-color: #ffffff;
+}
+
+.addtable th, .addtable td {
+    border: 1px solid black !important;
+    padding: 8px;
+    text-align: center;
+}
+
+.btn-search {
+    background-color: #22c55e !important; /* Green */
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.2) !important;
+}
+.btn-search:hover {
+    background-color: #16a34a !important;
+    box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3) !important;
+}
+
+.btn-cancel {
+    background-color: #ef4444 !important; /* Red */
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2) !important;
+}
+.btn-cancel:hover {
+    background-color: #dc2626 !important;
+    box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3) !important;
+}
+
+.btn-download {
+    background-color: #64748b !important; /* Slate / Grey */
+    box-shadow: 0 4px 6px -1px rgba(100, 116, 139, 0.2) !important;
+}
+.btn-download:hover {
+    background-color: #475569 !important;
+    box-shadow: 0 10px 15px -3px rgba(100, 116, 139, 0.3) !important;
+}
+
+.btn-upload {
+    background-color: #3b82f6 !important; /* Blue */
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2) !important;
+}
+.btn-upload:hover {
+    background-color: #2563eb !important;
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3) !important;
+}
+</style>
+      
+    @model List<MvcApplication1.Models.AssignmentResultModels>
+    @{
+        var terms = ViewBag.Terms as List<MvcApplication1.Models.TermModels>;
+    }
+    
+    <!-- Form -->
+    <div class="container" style="max-width: 1100px; margin: 20px auto;">
+        <h4>&#x2795; Add Result - Assignment</h4>
+        @using (Html.BeginForm("AddAssignmentResult", "Result", FormMethod.Post, new { enctype = "multipart/form-data", @class = "addform", id = "AddAssignmentResultForm" }))
+        {
+            <input type="hidden" id="examassignmentattedanceserial" name="ExamAssignmentAttedanceSerial" />
+             
+            <div class="inline-form-row">
+                <div>
+                    <label for="year">Year:</label>
+                    @Html.DropDownList("Year",(SelectList)ViewBag.Years, "--Select Year--", new { @class = "form-control", @id = "year",  required = "required" })
+                </div>
+                <div>
+                    <label for="batchserial">Batch:</label>
+                    <select id="batchserial" class="form-control" name="BatchSerial" required>
+                        <option value="">-- Select Batch --</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="classserial">Class:</label>
+                    <select id="classserial" class="form-control" name="ClassSerial" required>
+                        <option value="">-- Select Class --</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="termserial">Term:</label>
+                    <select id="termserial" class="form-control" name="TermSerial" required>
+                        <option value="">-- Select Term --</option>
+                        @foreach (var term in terms)
+                        {
+                            <option value="@term.TermSerial">@term.TermName</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label for="subjectserial">Subject:</label>
+                    <select id="subjectserial" class="form-control" name="SubjectSerial" required>
+                        <option value="">-- Select Subject --</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="examserial">Exam:</label>
+                    <select id="examserial" class="form-control" name="ExamSerial" required>
+                        <option value="">-- Select Exam --</option>
+                    </select>
+                </div>
+                <div class="button-group-inline">
+                    <button type="button" class="btn-search" onclick="searchStudents()">Search</button>
+                    <button type="button" class="btn-cancel" onclick="location.reload();">Cancel</button>
+                </div>
+            </div>
+           
+            <div id="studentsGrid" class="mt-4"></div>
+        }
+    </div>
+
+    @if (TempData["Message"] != null)
+    {
+        <script>
+            window.onload = function () {
+                var toastLive = document.getElementById('liveToast');
+                var toast = new bootstrap.Toast(toastLive);
+                toast.show();
+            };
+        </script>
+    }
+
+    @section Scripts {
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                // Cascade events
+                $('#year').change(function () {
+                    loadbatches();
+                });
+
+                $('#batchserial').change(function () {
+                    loadClasses();
+                });
+
+                $('#classserial').change(function () {
+                    loadSubjects();
+                });
+
+                $('#termserial').change(function () {
+                    loadExam();
+                });
+
+                $('#subjectserial').change(function () {
+                    loadExam();
+                });
+
+                // Load functions
+                function loadbatches() {
+                    var year = $('#year').val();
+                    if (year) {
+                        $.ajax({
+                            url: '/Exam/GetBatchesByYear',
+                            type: 'GET',
+                            data: { year: year },
+                            success: function (data) {
+                                var batchDropdown = $('#batchserial');
+                                batchDropdown.empty().append('<option value="">-- Select Batch --</option>');
+                                $.each(data, function (i, batch) {
+                                    batchDropdown.append('<option value="' + batch.Value + '">' + batch.Text + '</option>');
+                                });
+                            }
+                        });
+                    }
+                }
+
+                function loadClasses() {
+                    var batchSerial = $('#batchserial').val();
+                    if (batchSerial) {
+                        $.ajax({
+                            url: '/Exam/GetClassesByBatchByTeacherSerial',
+                            type: 'GET',
+                            data: { batchSerial: batchSerial },
+                            success: function (data) {
+                                var classDropdown = $('#classserial');
+                                classDropdown.empty().append('<option value="">-- Select Class --</option>');
+                                $.each(data, function (i, item) {
+                                    classDropdown.append('<option value="' + item.Value + '">' + item.Text + '</option>');
+                                });
+                            }
+                        });
+                    }
+                }
+
+                function loadSubjects() {
+                    var classSerial = $('#classserial').val();
+                    if (classSerial) {
+                        $.ajax({
+                            url: '/Exam/GetSubjectsByClassByTeacher',
+                            type: 'GET',
+                            data: { classSerial: classSerial },
+                            success: function (data) {
+                                var subjectDropdown = $('#subjectserial');
+                                subjectDropdown.empty().append('<option value="">-- Select Subject --</option>');
+                                $.each(data, function (i, item) {
+                                    subjectDropdown.append('<option value="' + item.Value + '">' + item.Text + '</option>');
+                                });
+                            }
+                        });
+                    }
+                }
+
+                function loadExam() {
+                    var termserial = $('#termserial').val();
+                    var subjectserial = $('#subjectserial').val();
+                    if (termserial && subjectserial) {
+                        $.ajax({
+                            url: '/Exam/GetExamsByTermOnlyHeld',
+                            type: 'GET',
+                            data: { termserial: termserial, subjectserial: subjectserial },
+                            success: function (data) {
+                                var examDropdown = $('#examserial');
+                                examDropdown.empty().append('<option value="">-- Select Exam --</option>');
+                                $.each(data, function (i, item) {
+                                    examDropdown.append('<option value="' + item.Value + '">' + item.Text + '</option>');
+                                });
+                            }
+                        });
+                    }
+                }
+            });
+        </script>
+    }
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function searchStudents() {
+            var year = $('#year').val();
+            var batchserial = $('#batchserial').val();
+            var classserial = $('#classserial').val();
+            var termserial = $('#termserial').val();
+            var subjectserial = $('#subjectserial').val();
+            var examserial = $('#examserial').val();
+
+            // Client-side validation
+            if (!year || !batchserial || !classserial || !termserial || !subjectserial || !examserial) {
+                alert("Please select all fields.");
+                return;
+            }
+
+            $.ajax({
+                url: '/Result/SearchStudentsforAddAssignmentResult',
+                type: 'GET',
+                data: {
+                    year: year,
+                    batchserial: batchserial,
+                    classserial: classserial,
+                    termserial: termserial,
+                    subjectserial: subjectserial,
+                    examserial: examserial
+                },
+                success: function (response) {
+                    $('#studentsGrid').html(response); // partial view
+                },
+                error: function () {
+                    alert("Error occurred.");
+                }
+            });
+        }
+    </script>
+
+    <script>
+        $(document).on('click', '.save-btn', function () {
+            var row = $(this).closest('tr');
+
+            var result = row.find('input[name="Result"]').val();
+            var examassignmentattedanceserial = row.find('input[name="ExamAssignmentAttedanceSerial"]').val();
+            var attedance = row.find('input[name="Attedance"]').val();
+
+            if (attedance === "") {
+                alert("If attendance is Null, cant add results.");
+                row.find('input[name="Result"]').val('').focus();
+                return false;
+            }
+
+            // result should be decimal
+            var decimalRegex = /^\d+(\.\d+)?$/;
+
+            if (!decimalRegex.test(result)) {
+                alert("Please enter a valid decimal number.");
+                return false; 
+            }
+
+            // Convert result to number for comparison
+            var resultValue = parseFloat(result);
+
+            // Validation for Absent
+            if (attedance === "Absent" && resultValue !== 0) {
+                alert("If attendance is Absent, result must be 0.");
+                row.find('input[name="Result"]').val('0').focus();
+                return false;
+            }
+
+            // validate for max result 100
+            if (parseFloat(resultValue) > 100) {
+                alert("Result cannot be greater than 100.");
+                row.find('input[name="Result"]').val('').focus();
+                return false;
+            }
+
+            if (!result) {
+                alert("Please enter Result");
+                return;
+            }
+
+            $.ajax({
+                url: '/Result/AddAssignmentResult',
+                type: 'POST',
+                data: {
+                    examassignmentattedanceserial: examassignmentattedanceserial,
+                    result: result
+                },
+                success: function(res) {
+                    alert(res.message);
+                    if (res.success) {
+                        searchStudents();
+                    }
+                },
+                error: function () {
+                    alert("An error occurred while saving the data.");
+                }
+            });
+        });
+
+        $(document).on('click', '#saveAllBtn', function () {
+            var resultsToSave = [];
+            var hasErrors = false;
+
+            $('#assignmentResultTable tbody tr').each(function () {
+                var row = $(this);
+                var result = row.find('input[name="Result"]').val();
+                var examassignmentattedanceserial = row.find('input[name="ExamAssignmentAttedanceSerial"]').val();
+                var attedance = row.find('input[name="Attedance"]').val();
+
+                if (result !== "") {
+                    // Validation for Absent
+                    var resultValue = parseFloat(result);
+
+                    if (attedance === "") {
+                        alert("If attendance is Null, cant add results.");
+                        row.find('input[name="Result"]').val('').focus();
+                        hasErrors = true;
+                        return false; 
+                    }
+
+                    var decimalRegex = /^\d+(\.\d+)?$/;
+                    if (!decimalRegex.test(result)) {
+                        alert("Please enter a valid decimal number.");
+                        row.find('input[name="Result"]').val('').focus();
+                        hasErrors = true;
+                        return false; 
+                    }
+
+                    if (attedance === "Absent" && resultValue !== 0) {
+                        alert("If attendance is Absent, result must be 0.");
+                        row.find('input[name="Result"]').val('0').focus();
+                        hasErrors = true;
+                        return false;
+                    }
+
+                    if (parseFloat(resultValue) > 100) {
+                        alert("Result cannot be greater than 100.");
+                        row.find('input[name="Result"]').val('').focus();
+                        hasErrors = true;
+                        return false;
+                    }
+
+                    resultsToSave.push({
+                        ExamAssignmentAttedanceSerial: examassignmentattedanceserial,
+                        Result: result
+                    });
+                }
+            });
+
+            if (hasErrors) {
+                return;
+            }
+
+            if (resultsToSave.length === 0) {
+                alert("No results to save.");
+                return;
+            }
+
+            $.ajax({
+                url: '/Result/AddAssignmentResultBulk',
+                type: 'POST',
+                data: { resultsJson: JSON.stringify(resultsToSave) },
+                success: function(res) {
+                    alert(res.message);
+                    if (res.success) {
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    alert("An error occurred while saving the data.");
+                }
+            });
+        });
+    </script>
+
+    <script>
+        setTimeout(function () {
+            const alert = document.querySelector('.alert');
+            if (alert) {
+                alert.style.display = 'none';
+            }
+        }, 3000); // Hide after 3 seconds
+    </script>
+</body>
+</html>
