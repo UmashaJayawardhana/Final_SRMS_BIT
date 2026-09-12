@@ -212,14 +212,14 @@ git clone <repository-url>
 5. Run the application using Visual Studio.
 
 ## 📷 Screenshots
-![Uploading image.png…](Login)
-* Login
-  
-![Uploading image.png…](Dashboard)
-* Dashboard
+<h3>Login</h3>
+<img src="Screenshots/login.png" width="800">
 
-![Uploading image.png…](Student Management)
-* Student Management
+<h3>Dashboard</h3>
+<img src="Screenshots/dashboard.png" width="800">
+
+<h3>Student Management</h3>
+<img src="Screenshots/studentmanagement.png" width="800">
 
 
 * Result Management
